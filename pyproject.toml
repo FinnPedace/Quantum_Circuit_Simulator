@@ -5,11 +5,16 @@ description = "A Python library for simulating Qiskit quantum circuits and retri
 readme = "README.md"
 authors = [
     { name = "Finn Pedace", email = "finnpedace@outlook.de" }
-    { name = "Jannis Schuhmacher, email = "st183991@stud.uni-stuttgart.de"}
+
 ]
 requires-python = ">=3.13"
 dependencies = [
     "qiskit>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
 ]
 
 [build-system]
