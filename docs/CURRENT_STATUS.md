@@ -85,29 +85,25 @@ und bildet `|c, t>` auf `|c, t XOR c>` ab. Bei jeder CNOT-Anweisung werden
 Control und Target mit `circuit.find_bit(...)` bestimmt. Damit funktioniert
 auch `cx(0, 2)` auf einem Drei-Qubit-Circuit.
 
-## Noch nicht implementiert
-
 ### Measurement Sampling und Counts
 
 Messanweisungen verändern den zurückgegebenen Statevector nicht; das ist
 korrekt, weil der Statevector den Zustand **vor** der Endmessung darstellen
-soll. Es gibt jedoch noch kein Sampling der Messergebnisse.
+soll. Für Circuits mit Classical Bits werden die Messergebnisse jetzt aus dem
+finalen Statevector gesampelt.
 
-Am Ende von `simulate(...)` steht deshalb aktuell:
-
-```python
-return SimulationResult(statevector=final_sv, counts=None)
-```
-
-Für Circuits mit `measure_all()` muss später aus
+Die Wahrscheinlichkeiten werden berechnet durch:
 
 ```python
 probabilities = np.abs(final_sv) ** 2
 ```
 
-mit `config.shots` und einem durch `config.seed` initialisierten
-Zufallszahlengenerator gesampelt werden. Das Ergebnis muss ein
-Qiskit-kompatibles Count-Dictionary ergeben, z. B. `{"00": 512, "11": 488}`.
+Ein mit `config.seed` initialisierter NumPy-Zufallszahlengenerator zieht daraus
+`config.shots` Basiszustandsindizes. Diese Indizes werden als Bitstrings mit
+führenden Nullen formatiert und zu einem Qiskit-kompatiblen Count-Dictionary
+gezählt, beispielsweise `{"00": 512, "11": 488}`.
+
+## Noch nicht implementiert
 
 ### Gate Fusion
 
@@ -133,10 +129,10 @@ Derzeitige Einordnung:
 | --- | --- |
 | Ein-Qubit-Gates | grün |
 | Eigenes `UnitaryGate` | grün |
-| Deterministische Counts | rot, bis Sampling implementiert ist |
-| Bell-State-Statevector | grün; Count-Prüfung rot, bis Sampling implementiert ist |
-| Nicht benachbartes CNOT-Statevector | grün; Count-Prüfung rot, bis Sampling implementiert ist |
-| Zufälliger unterstützter Circuit | Statevector korrekt bis auf numerische Rundungsreste; Counts rot |
+| Deterministische Counts | grün |
+| Bell-State | grün |
+| Nicht benachbartes CNOT | grün |
+| Zufälliger unterstützter Circuit | grün |
 
 Bei Statevector-Vergleichen sollte eine kleine numerische Toleranz verwendet
 werden, beispielsweise `atol=1e-12`, da Aer und NumPy bei mathematisch
@@ -145,7 +141,6 @@ können.
 
 ## Nächste Schritte
 
-1. Sampling aus `abs(statevector) ** 2` implementieren.
-2. Deterministische und probabilistische Count-Tests ausführen.
-3. Toleranz beim Statevector-Test ergänzen.
-4. Erst danach Gate Fusion als optionale Optimierung angehen.
+1. Gate Fusion als optionale Optimierung angehen.
+2. Weitere Fehlerfalltests für nicht unterstützte Circuit-Strukturen ergänzen.
+3. README um den aktuellen Funktionsumfang und die Einschränkungen ergänzen.
