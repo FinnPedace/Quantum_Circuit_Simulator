@@ -9,6 +9,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "matplotlib>=3.9",
     "qiskit>=1.0",
     "qiskit-aer>=0.17.2",
 ]

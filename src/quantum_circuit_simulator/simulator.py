@@ -2,10 +2,8 @@ import numpy as np
 from qiskit import QuantumCircuit
 from .config import SimulationConfig
 from .result import SimulationResult
-
 import numpy as np
 from qiskit import QuantumCircuit
-
 from .config import SimulationConfig
 from .result import SimulationResult
 
