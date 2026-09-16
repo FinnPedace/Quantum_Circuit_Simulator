@@ -17,6 +17,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "sphinx>=9.1.0",
 ]
 
 [build-system]

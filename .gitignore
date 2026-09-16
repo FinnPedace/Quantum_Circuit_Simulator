@@ -25,3 +25,7 @@ TestResults.xml
 # Python caches
 __pycache__/
 .pytest_cache/
+
+# Sphinx build artifacts
+docs/_build/
+docs/_autosummary/
