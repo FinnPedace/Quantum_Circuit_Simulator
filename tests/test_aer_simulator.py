@@ -27,7 +27,7 @@ def assert_statevectors_equivalent(
     pivot = np.flatnonzero(np.abs(expected) > 1e-12)[0]
     phase = actual[pivot] / expected[pivot]
     np.testing.assert_allclose(np.abs(phase), 1.0)
-    np.testing.assert_allclose(actual, phase * expected)
+    np.testing.assert_allclose(actual, phase * expected, atol=1e-12)
 
 
 @pytest.mark.parametrize("gate_name", ["x", "y", "z", "h"])

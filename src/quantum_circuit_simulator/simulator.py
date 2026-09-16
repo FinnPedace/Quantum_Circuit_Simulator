@@ -150,4 +150,27 @@ class StatevectorSimulator:
         # Schritt 5: Tensor zurück in 1D-Statevector wandeln
         final_sv = np.reshape(tensor, -1, order="F")
 
-        return SimulationResult(statevector=final_sv, counts=None)
+        # Schritt 6: Counts durch Sampling generieren (falls Messungen existieren)
+        counts = None
+        if circuit.num_clbits > 0:
+            # 1. Wahrscheinlichkeiten der einzelnen Zustände berechnen
+            probabilities = np.abs(final_sv) ** 2
+
+            # 2. Zufallsgenerator mit dem Seed aus der Config initialisieren (für Reproduzierbarkeit)
+            rng = np.random.default_rng(config.seed)
+
+            # 3. Indizes basierend auf den Wahrscheinlichkeiten ziehen
+            # len(probabilities) entspricht 2^num_qubits
+            sampled_indices = rng.choice(
+                len(probabilities), size=config.shots, p=probabilities
+            )
+
+            # 4. Gezogene Indizes in Qiskit-kompatible Bitstrings umwandeln und zählen
+            counts = {}
+            for idx in sampled_indices:
+                # Formatiert den Integer als Binär-String mit passender Länge und führenden Nullen.
+                # Ein Index wie 1 wird bei 2 Qubits zu "01", was exakt Qiskits Basisordnung entspricht.
+                bitstring = format(idx, f"0{num_qubits}b")
+                counts[bitstring] = counts.get(bitstring, 0) + 1
+
+        return SimulationResult(statevector=final_sv, counts=counts)
