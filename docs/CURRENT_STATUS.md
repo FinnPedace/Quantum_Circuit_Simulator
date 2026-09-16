@@ -72,23 +72,20 @@ Die vorhandenen Tests bestätigen den Aer-Abgleich für:
 - das parametrische Gate `RX(pi / 3)`,
 - ein selbst definiertes Ein-Qubit-`UnitaryGate`.
 
-## Noch nicht implementiert
-
 ### CNOT
 
-`cx` wird von der Validierung akzeptiert, aber in der Gate-Schleife aktuell nur
-übersprungen:
+`cx` wird als allgemeine Zwei-Qubit-Tensor-Kontraktion mit `np.einsum`
+ausgeführt. Der CNOT-Tensor hat die Achsen
 
-```python
-if op_name == "cx":
-    # TODO Meilenstein M4: CNOT-Kontraktion
-    pass
+```text
+[control_out, target_out, control_in, target_in]
 ```
 
-Deshalb sind Bell-State-, CNOT- und Random-Circuit-Tests mit CNOT aktuell
-nicht erfolgreich. Als nächster Rechenschritt muss eine allgemeine
-Zwei-Qubit-Tensor-Kontraktion mit `np.einsum` umgesetzt werden, die Control und
-Target auch bei nicht benachbarten Qubits korrekt behandelt.
+und bildet `|c, t>` auf `|c, t XOR c>` ab. Bei jeder CNOT-Anweisung werden
+Control und Target mit `circuit.find_bit(...)` bestimmt. Damit funktioniert
+auch `cx(0, 2)` auf einem Drei-Qubit-Circuit.
+
+## Noch nicht implementiert
 
 ### Measurement Sampling und Counts
 
@@ -137,9 +134,9 @@ Derzeitige Einordnung:
 | Ein-Qubit-Gates | grün |
 | Eigenes `UnitaryGate` | grün |
 | Deterministische Counts | rot, bis Sampling implementiert ist |
-| Bell-State | rot, bis CNOT und Sampling implementiert sind |
-| Nicht benachbartes CNOT | rot, bis CNOT und Sampling implementiert sind |
-| Zufälliger unterstützter Circuit | rot, solange enthaltene CNOTs fehlen |
+| Bell-State-Statevector | grün; Count-Prüfung rot, bis Sampling implementiert ist |
+| Nicht benachbartes CNOT-Statevector | grün; Count-Prüfung rot, bis Sampling implementiert ist |
+| Zufälliger unterstützter Circuit | Statevector korrekt bis auf numerische Rundungsreste; Counts rot |
 
 Bei Statevector-Vergleichen sollte eine kleine numerische Toleranz verwendet
 werden, beispielsweise `atol=1e-12`, da Aer und NumPy bei mathematisch
@@ -148,9 +145,7 @@ können.
 
 ## Nächste Schritte
 
-1. CNOT als Zwei-Qubit-`einsum`-Kontraktion implementieren.
-2. Bell-State- und nicht-benachbarten-CNOT-Tests ausführen und korrigieren.
-3. Sampling aus `abs(statevector) ** 2` implementieren.
-4. Deterministische und probabilistische Count-Tests ausführen.
-5. Toleranz beim Statevector-Test ergänzen.
-6. Erst danach Gate Fusion als optionale Optimierung angehen.
+1. Sampling aus `abs(statevector) ** 2` implementieren.
+2. Deterministische und probabilistische Count-Tests ausführen.
+3. Toleranz beim Statevector-Test ergänzen.
+4. Erst danach Gate Fusion als optionale Optimierung angehen.
