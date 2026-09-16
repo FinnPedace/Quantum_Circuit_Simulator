@@ -1,9 +1,6 @@
 import numpy as np
 from qiskit import QuantumCircuit
-from .config import SimulationConfig
-from .result import SimulationResult
-import numpy as np
-from qiskit import QuantumCircuit
+
 from .config import SimulationConfig
 from .result import SimulationResult
 
@@ -20,6 +17,44 @@ for control_input in range(2):
 
 
 class StatevectorSimulator:
+    @staticmethod
+    def _apply_single_qubit_gate(
+        tensor: np.ndarray,
+        matrix: np.ndarray,
+        target_qubit: int,
+        num_qubits: int,
+    ) -> np.ndarray:
+        """Apply one (possibly fused) matrix to a state tensor."""
+        state_axes = list(range(num_qubits))
+        output_index = num_qubits
+        output_axes = list(state_axes)
+        output_axes[target_qubit] = output_index
+
+        return np.einsum(
+            matrix,
+            [output_index, target_qubit],
+            tensor,
+            state_axes,
+            output_axes,
+        )
+
+    def _flush_fused_gates(
+        self,
+        tensor: np.ndarray,
+        fused_gates: dict[int, np.ndarray],
+        num_qubits: int,
+    ) -> np.ndarray:
+        """Apply all pending single-qubit matrices and clear the buffer."""
+        for target_qubit, matrix in fused_gates.items():
+            tensor = self._apply_single_qubit_gate(
+                tensor,
+                matrix,
+                target_qubit,
+                num_qubits,
+            )
+        fused_gates.clear()
+        return tensor
+
     def _validate_circuit(self, circuit: QuantumCircuit) -> None:
         """Prüft, ob der Circuit nur unitäre Gates und CNOT-Gates enthält."""
         if len(circuit.cregs) > 1:
@@ -88,24 +123,34 @@ class StatevectorSimulator:
         # Umformen in N-dimensionalen Tensor mit Qiskit-Basisordnung (Fortran-Layout)
         tensor = np.reshape(state, (2,) * num_qubits, order="F")
 
-        # Basis-Achsen für den Statevector-Tensor: [0, 1, ..., N-1]
-        state_axes = list(range(num_qubits))  # Indizes der Qubits im Statevector-Tensor
+        # Aufeinanderfolgende Ein-Qubit-Gates werden pro Qubit gesammelt.
+        # Ein späteres Gate U2 muss links multipliziert werden: U2 @ U1.
+        fused_gates: dict[int, np.ndarray] = {}
 
-        # Schritt 4: Gate-Schleife
+        # Schritt 4: Gate-Schleife mit Gate Fusion
         for instruction in circuit.data:
             op = instruction.operation
             op_name = op.name
 
-            # Barrieren und Messungen verändern den Statevector nicht
+            # Strukturelle Instruktionen bilden eine Fusionsgrenze, verändern
+            # den Statevector selbst aber nicht.
             if op_name in ["barrier", "measure"]:
+                tensor = self._flush_fused_gates(
+                    tensor, fused_gates, num_qubits
+                )
                 continue
 
             if op_name == "cx":
+                tensor = self._flush_fused_gates(
+                    tensor, fused_gates, num_qubits
+                )
                 control_qubit = circuit.find_bit(instruction.qubits[0]).index
                 target_qubit = circuit.find_bit(instruction.qubits[1]).index
 
                 control_output_idx = num_qubits
                 target_output_idx = num_qubits + 1
+
+                state_axes = list(range(num_qubits))
 
                 gate_axes = [
                     control_output_idx,
@@ -125,25 +170,16 @@ class StatevectorSimulator:
                     out_axes,
                 )
             else:
-                # Es ist ein gültiges Ein-Qubit-Gate
-                matrix = op.to_matrix()
-                # Exakte Bestimmung des Qubit-Indexes
                 target_qubit = circuit.find_bit(instruction.qubits[0]).index
+                matrix = np.asarray(op.to_matrix(), dtype=complex)
+                previous_matrix = fused_gates.get(target_qubit)
+                fused_gates[target_qubit] = (
+                    matrix
+                    if previous_matrix is None
+                    else matrix @ previous_matrix
+                )
 
-                # Für die Kontraktion wird ein Index benötigt, der nicht
-                # in state_axes vorkommt. Wir nutzen dafür einfach num_qubits.
-                out_idx = num_qubits
-
-                # Die 2x2-Matrix hat die Achsen [Output, Input]
-                gate_axes = [out_idx, target_qubit]
-
-                # Der resultierende Tensor hat dieselben Achsen wie vorher,
-                # nur am target_qubit steht der neue out_idx
-                out_axes = list(state_axes)
-                out_axes[target_qubit] = out_idx
-
-                # Tensor-Kontraktion ausführen
-                tensor = np.einsum(matrix, gate_axes, tensor, state_axes, out_axes)
+        tensor = self._flush_fused_gates(tensor, fused_gates, num_qubits)
 
         # Schritt 5: Tensor zurück in 1D-Statevector wandeln
         final_sv = np.reshape(tensor, -1, order="F")

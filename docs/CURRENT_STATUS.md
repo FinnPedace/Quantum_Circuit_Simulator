@@ -103,19 +103,18 @@ Ein mit `config.seed` initialisierter NumPy-Zufallszahlengenerator zieht daraus
 führenden Nullen formatiert und zu einem Qiskit-kompatiblen Count-Dictionary
 gezählt, beispielsweise `{"00": 512, "11": 488}`.
 
-## Noch nicht implementiert
-
 ### Gate Fusion
 
-Gate Fusion ist bislang nicht implementiert. Die Simulation verarbeitet jede
-Operation einzeln in ihrer Circuit-Reihenfolge. Die spätere Optimierung kann
-benachbarte Ein-Qubit-Gates auf demselben Qubit über
+Aufeinanderfolgende Ein-Qubit-Gates werden pro Qubit gesammelt und über
 
 ```python
 fused = U2 @ U1
 ```
 
-zusammenfassen und vor `cx`, Messung oder Circuit-Ende anwenden.
+zusammengefasst. Die fusionierten Matrizen werden an `cx`, Barrieren,
+Messungen oder am Circuit-Ende auf den Zustand angewandt. Unabhängige Gates
+auf verschiedenen Qubits können dabei innerhalb eines Abschnitts gemeinsam
+gepuffert werden.
 
 ## Teststatus
 
@@ -133,6 +132,8 @@ Derzeitige Einordnung:
 | Bell-State | grün |
 | Nicht benachbartes CNOT | grün |
 | Zufälliger unterstützter Circuit | grün |
+| Gate Fusion und Matrixreihenfolge | grün |
+| Längerer Fusions-Circuit gegen Aer | grün |
 
 Bei Statevector-Vergleichen sollte eine kleine numerische Toleranz verwendet
 werden, beispielsweise `atol=1e-12`, da Aer und NumPy bei mathematisch
@@ -141,6 +142,5 @@ können.
 
 ## Nächste Schritte
 
-1. Gate Fusion als optionale Optimierung angehen.
-2. Weitere Fehlerfalltests für nicht unterstützte Circuit-Strukturen ergänzen.
-3. README um den aktuellen Funktionsumfang und die Einschränkungen ergänzen.
+1. Weitere Fehlerfalltests für nicht unterstützte Circuit-Strukturen ergänzen.
+2. README um den aktuellen Funktionsumfang und die Einschränkungen ergänzen.
