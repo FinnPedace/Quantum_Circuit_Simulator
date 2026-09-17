@@ -20,6 +20,25 @@ Backendobjekte und die Aer-``save_statevector``-Instruktion werden vor der
 Messung einmalig vorbereitet. Gemessen wird bei allen Varianten nur der
 vollständige Simulationsaufruf mit bereits vorhandenem Circuit und Backend.
 
+Skalierungsplot
+---------------
+
+Der für die README erzeugte Plot vergleicht mehrere Qubitzahlen auf einer
+logarithmischen Zeitachse:
+
+.. image:: images/benchmark_simulators.png
+   :alt: Laufzeitvergleich von Aer, einsum und Numba mit und ohne Gate Fusion
+   :align: center
+
+Er kann zusammen mit den zugrunde liegenden CSV-Daten neu erzeugt werden:
+
+.. code-block:: console
+
+   uv run python benchmarks/plot_benchmarks.py
+
+Standardmäßig entstehen ``docs/images/benchmark_simulators.png`` und
+``benchmarks/results/benchmark_simulators.csv``.
+
 Benchmark starten
 -----------------
 

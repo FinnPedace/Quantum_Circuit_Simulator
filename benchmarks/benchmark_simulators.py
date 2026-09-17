@@ -117,13 +117,13 @@ def format_table(
     return "\n".join([render(headers), separator, *(render(row) for row in rows)])
 
 
-def run_benchmark(
+def collect_benchmark(
     num_qubits: int,
     layers: int,
     repeats: int,
     warmups: int,
-) -> None:
-    """Validate, warm up, time, and print all simulator variants."""
+) -> tuple[QuantumCircuit, dict[str, list[float]]]:
+    """Validate and measure all variants for one circuit size."""
     if repeats < 1:
         raise ValueError("repeats must be at least 1")
     if warmups < 1:
@@ -172,6 +172,23 @@ def run_benchmark(
     timings = {
         name: measure_runner(runner, repeats) for name, runner in runners.items()
     }
+
+    return circuit, timings
+
+
+def run_benchmark(
+    num_qubits: int,
+    layers: int,
+    repeats: int,
+    warmups: int,
+) -> None:
+    """Validate, warm up, time, and print all simulator variants."""
+    circuit, timings = collect_benchmark(
+        num_qubits=num_qubits,
+        layers=layers,
+        repeats=repeats,
+        warmups=warmups,
+    )
 
     print(
         f"Python {platform.python_version()}, NumPy {np.__version__}, "
