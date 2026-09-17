@@ -61,6 +61,26 @@ uv run <befehl>             # Befehl in der Projektumgebung ausführen
 Pre-Commit führt konfigurierte Hooks aus, beispielsweise YAML-Prüfung,
 Whitespace-Korrektur oder Black-Formatierung.
 
+Die Hooks werden in `.pre-commit-config.yaml` mit YAML-Syntax eingetragen:
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+```
+
+`repo` bezeichnet die Hook-Quelle, `rev` die verwendete Version und `hooks`
+die daraus aktivierten Prüfungen. Einrückungen sind in YAML Teil der Syntax.
+
 ```bash
 uv tool run pre-commit install             # lokalen Git-Hook installieren
 uv tool run pre-commit run --all-files     # alle Dateien manuell prüfen
@@ -86,6 +106,29 @@ Werkzeuge wie **mypy** oder **Pyright** prüfen Typannotationen, ohne das
 Programm auszuführen. Sie finden beispielsweise falsch verwendete Parameter
 oder unvereinbare Rückgabewerte.
 
+### Numba
+
+Numba ist ein Just-in-Time-Compiler für numerischen Python-Code. Mit `@njit`
+markierte Funktionen werden beim ersten Aufruf analysiert und in nativen
+Maschinencode übersetzt. Dadurch können rechenintensive Schleifen deutlich
+schneller laufen als im Python-Interpreter.
+
+```python
+from numba import njit
+
+@njit(cache=True)
+def add_arrays(left, right):
+    result = left.copy()
+    for index in range(left.size):
+        result[index] += right[index]
+    return result
+```
+
+Der erste Aufruf enthält die Kompilierungszeit. Laufzeitvergleiche benötigen
+deshalb einen ungemessenen Warm-up-Aufruf. Numba eignet sich besonders für
+numerische Schleifen mit NumPy-Arrays und einfachen Datentypen, nicht für
+beliebigen dynamischen Python-Code.
+
 ### pytest
 
 Tests liegen üblicherweise im Verzeichnis `tests/` und beginnen mit `test_`.
@@ -102,6 +145,12 @@ uv run pytest -k "cnot"                # Tests nach Namen filtern
 Sphinx erzeugt aus RST-Dateien und Python-Docstrings eine verlinkte
 HTML-Dokumentation.
 
+Agentic AI kann beim Erstellen und Pflegen der Dokumentation unterstützen,
+beispielsweise indem sie Quellcode analysiert, erste Erklärungen formuliert,
+Beispiele ergänzt und fehlende API-Beschreibungen findet. Die generierten
+Inhalte müssen fachlich geprüft werden. Ein strenger Sphinx-Build stellt danach
+sicher, dass Seitenstruktur, Querverweise und Autodoc-Importe funktionieren.
+
 ```bash
 # Normaler HTML-Build
 uv run sphinx-build -b html docs docs/_build/html
@@ -115,16 +164,6 @@ uv run python -m http.server 8000 --directory docs/_build/html
 
 Danach ist die Dokumentation unter <http://localhost:8000> oder direkt über
 `docs/_build/html/index.html` erreichbar.
-
-Wichtige Direktiven:
-
-```rst
-.. toctree::                     Verknüpft Dokumentationsseiten
-.. code-block:: python           Formatiert Quellcode
-.. math::                        Rendert mathematische Formeln
-.. autofunction:: paket.funktion
-.. autoclass:: paket.Klasse
-```
 
 ## GitHub Actions und CI
 
@@ -196,10 +235,30 @@ können.
 
 ## Statevector und Tensor-Kontraktion
 
-Ein System aus `n` Qubits besitzt `2**n` komplexe Amplituden. Eine vollständige
-`2**n × 2**n`-Matrixmultiplikation benötigt ungefähr `O(4**n)` Operationen. Ein
-lokales Ein- oder Zwei-Qubit-Gate kann durch Tensor-Kontraktion dagegen in
-`O(2**n)` auf den Statevector angewendet werden.
+Ein Zustand aus `n` Qubits lässt sich in Bra-Ket-Schreibweise entwickeln als
+
+$$
+|\psi\rangle = \sum_{x=0}^{2^n-1} \alpha_x |x\rangle.
+$$
+
+Ein Ein-Qubit-Gate besitzt die Darstellung
+
+$$
+U = \sum_{o=0}^{1}\sum_{i=0}^{1} U_{oi}|o\rangle\langle i|.
+$$
+
+Wirkt `U` beispielsweise auf Qubit `k`, bleiben alle anderen Qubit-Indizes
+erhalten. Nur über den Eingangsindex `i` des Ziel-Qubits wird summiert:
+
+$$
+\psi'_{q_0,\ldots,o,\ldots,q_{n-1}}
+= \sum_{i=0}^{1}
+U_{oi}\,\psi_{q_0,\ldots,i,\ldots,q_{n-1}}.
+$$
+
+Der gemeinsame Index `i` verschwindet durch die Summation. Genau diese
+Summation über gemeinsame Indizes heißt **Tensor-Kontraktion** und wird im
+Projekt mit `numpy.einsum` beschrieben.
 
 Im Simulator wird der Vektor als Tensor mit einer Achse pro Qubit dargestellt:
 
@@ -209,44 +268,9 @@ tensor = np.reshape(statevector, (2,) * num_qubits, order="F")
 
 `order="F"` ist entscheidend: Tensorachse `i` entspricht dadurch Qiskit-Qubit
 `i`. `numpy.einsum` beschreibt anschließend die Summation über die
-Gate-Eingangsachsen.
-
-## Gate Fusion
-
-Aufeinanderfolgende Ein-Qubit-Gates werden zuerst als kleine 2×2-Matrizen
-multipliziert:
-
-```text
-H → Rx → Rz    ergibt    U_fused = Rz @ Rx @ H
-```
-
-Das spätere Gate steht links. Dadurch wird der große Zustandstensor nur einmal
-statt dreimal kontrahiert. CNOT, Barrieren, Messungen und das Circuit-Ende sind
-Fusionsgrenzen.
-
-## Alternative Blocknotation und Numba
-
-Für ein Gate auf Ziel-Qubit `i` gilt:
-
-```text
-pair_distance = 2**i
-block_size    = 2**(i + 1)
-```
-
-Die zusammengehörigen Statevector-Indizes lauten:
-
-```python
-zero_index = block_start + offset
-one_index = zero_index + pair_distance
-```
-
-Sie unterscheiden sich ausschließlich im Zielbit. Eine Ein-Qubit-Matrix wirkt
-auf dieses Amplitudenpaar. Beim CNOT werden die beiden Amplituden nur dann
-vertauscht, wenn das Control-Bit gesetzt ist.
-
-Numba übersetzt diese expliziten Python-Schleifen mit `@njit` in nativen
-Maschinencode. Der erste Aufruf enthält JIT-Kompilierungszeit; faire Benchmarks
-benötigen deshalb mindestens einen ungemessenen Warm-up-Lauf.
+Gate-Eingangsachsen. Ein System mit `n` Qubits besitzt `2**n` Amplituden. Die
+Anwendung eines lokalen Gates benötigt deshalb `O(2**n)` statt der ungefähr
+`O(4**n)` Operationen einer allgemeinen dichten `2**n × 2**n`-Matrix.
 
 ## Benchmarking
 
