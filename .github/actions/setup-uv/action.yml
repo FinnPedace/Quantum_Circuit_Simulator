@@ -1,4 +1,5 @@
 name: 'setup-uv'
+description: 'Installs uv and synchronizes the project dependencies.'
 
 runs:
   using: "composite"
@@ -10,7 +11,8 @@ runs:
         enable-cache: true
         cache-dependency-glob: |
           ./pyproject.toml
+          ./uv.lock
 
     - name: Install all Python dependencies into a virtual environment
       shell: bash
-      run: uv sync --all-extras  # always install all dependencies, this simplifies caching
+      run: uv sync --locked
