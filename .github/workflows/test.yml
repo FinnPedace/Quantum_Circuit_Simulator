@@ -20,5 +20,5 @@ jobs:
       env:
         UV_PYTHON: ${{ matrix.python-version }}
       uses: ./.github/actions/setup-uv
-    - name: Run pytest --nbmake
-      run: uv run --no-project pytest --nbmake
+    - name: Run pytest
+      run: uv run pytest
