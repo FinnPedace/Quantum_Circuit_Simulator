@@ -7,24 +7,31 @@ Ziel
 ``benchmarks/benchmark_simulators.py`` misst den vollständigen
 Simulationsaufruf für fünf Varianten:
 
-* Qiskit ``AerSimulator`` mit einem einmalig konstruierten Statevector-Backend;
+* Qiskit ``AerSimulator`` mit einem einmalig konstruierten Statevector-Backend,
+  deaktivierter Aer-Gate-Fusion und genau einem CPU-Thread;
 * NumPy-``einsum`` ohne Gate Fusion;
 * NumPy-``einsum`` mit Gate Fusion;
 * Numba ohne Gate Fusion;
 * Numba mit Gate Fusion.
 
-Der erzeugte Circuit enthält pro Qubit jeweils ``rx``, ``ry`` und ``rz`` als
-zusammenhängende Fusionsgruppe sowie ein CNOT pro Layer.
+Für jede Qubitzahl wird ein reproduzierbarer Zufallscircuit mit exakt 100
+Gates erzeugt. Mit einer Wahrscheinlichkeit von 80 % wird eines der
+Ein-Qubit-Gates ``h``, ``x``, ``sx``, ``rx``, ``ry`` oder ``rz`` auf ein
+zufälliges Qubit angewendet. Die übrigen 20 % sind CNOTs mit verschiedenen,
+zufällig gewählten Control- und Target-Qubits. Der feste Seed 42 macht die
+Circuits und damit den Vergleich reproduzierbar.
 
 Backendobjekte und die Aer-``save_statevector``-Instruktion werden vor der
 Messung einmalig vorbereitet. Gemessen wird bei allen Varianten nur der
 vollständige Simulationsaufruf mit bereits vorhandenem Circuit und Backend.
+Die Aer-Optionen ``fusion_enable=False`` und ``max_parallel_threads=1``
+verhindern dabei interne Gate Fusion und parallele Statevector-Updates.
 
 Skalierungsplot
 ---------------
 
-Der für die README erzeugte Plot vergleicht mehrere Qubitzahlen auf einer
-logarithmischen Zeitachse:
+Der für die README erzeugte Plot vergleicht standardmäßig 4, 8, 12, 16 und
+20 Qubits auf einer logarithmischen Zeitachse:
 
 .. image:: images/benchmark_simulators.png
    :alt: Laufzeitvergleich von Aer, einsum und Numba mit und ohne Gate Fusion
@@ -53,16 +60,21 @@ Parameter können über die Kommandozeile verändert werden:
 .. code-block:: console
 
    uv run python benchmarks/benchmark_simulators.py \
-       --qubits 16 \
-       --layers 10 \
-       --repeats 9 \
+       --qubits 20 \
+       --gates 100 \
+       --seed 42 \
+       --repeats 5 \
        --warmups 2
 
 ``--qubits``
    Anzahl der Qubits. Der Statevector besitzt :math:`2^n` Amplituden.
 
-``--layers``
-   Anzahl der Gate-Layer des deterministischen Benchmark-Circuits.
+``--gates``
+   Exakte Anzahl der zufällig erzeugten Gates im Circuit.
+
+``--seed``
+   Seed des Zufallszahlengenerators. Derselbe Seed erzeugt für dieselbe
+   Qubitzahl und Gate-Anzahl denselben Circuit.
 
 ``--repeats``
    Zahl der gemessenen vollständigen Simulationsläufe.

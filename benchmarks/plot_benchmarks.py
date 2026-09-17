@@ -59,9 +59,10 @@ METHOD_STYLES = {
 
 def collect_scaling_data(
     qubit_counts: list[int],
-    layers: int,
+    gate_count: int,
     repeats: int,
     warmups: int,
+    seed: int,
 ) -> dict[str, list[float]]:
     """Return median runtimes in milliseconds for every method and size."""
     medians_ms = {name: [] for name in METHOD_STYLES}
@@ -70,9 +71,10 @@ def collect_scaling_data(
         print(f"Benchmarking {num_qubits} qubits ...", flush=True)
         _, timings = collect_benchmark(
             num_qubits=num_qubits,
-            layers=layers,
+            gate_count=gate_count,
             repeats=repeats,
             warmups=warmups,
+            seed=seed,
         )
         for name in METHOD_STYLES:
             medians_ms[name].append(median(timings[name]) * 1_000)
@@ -88,7 +90,9 @@ def write_csv(
     """Store the plotted median values in a machine-readable CSV file."""
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w", newline="", encoding="utf-8") as csv_file:
-        writer = csv.writer(csv_file)
+        # Always use Unix line endings so regenerated results stay identical
+        # across Windows, macOS, and Linux checkouts.
+        writer = csv.writer(csv_file, lineterminator="\n")
         writer.writerow(["qubits", *medians_ms])
         for index, num_qubits in enumerate(qubit_counts):
             writer.writerow(
@@ -103,8 +107,9 @@ def create_plot(
     output: Path,
     qubit_counts: list[int],
     medians_ms: dict[str, list[float]],
-    layers: int,
+    gate_count: int,
     repeats: int,
+    seed: int,
 ) -> None:
     """Create a readable logarithmic scaling plot for the README."""
     plt.style.use("seaborn-v0_8-whitegrid")
@@ -130,8 +135,8 @@ def create_plot(
     )
     axis.set_title(
         (
-            f"{layers} layers; RX–RY–RZ on every qubit plus one CNOT per layer; "
-            f"median of {repeats} warm runs"
+            f"{gate_count} reproducible random gates per circuit; seed {seed}; "
+            f"median of {repeats} warm runs; Aer: 1 thread, no fusion"
         ),
         fontsize=9.5,
         color="#555555",
@@ -177,11 +182,12 @@ def parse_args() -> argparse.Namespace:
         "--qubits",
         type=int,
         nargs="+",
-        default=[6, 8, 10, 12, 14, 16],
+        default=[4, 8, 12, 16, 20],
     )
-    parser.add_argument("--layers", type=int, default=8)
-    parser.add_argument("--repeats", type=int, default=7)
+    parser.add_argument("--gates", type=int, default=100)
+    parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--warmups", type=int, default=2)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
         "--output",
         type=Path,
@@ -199,17 +205,19 @@ if __name__ == "__main__":
     arguments = parse_args()
     data = collect_scaling_data(
         qubit_counts=arguments.qubits,
-        layers=arguments.layers,
+        gate_count=arguments.gates,
         repeats=arguments.repeats,
         warmups=arguments.warmups,
+        seed=arguments.seed,
     )
     write_csv(arguments.csv, arguments.qubits, data)
     create_plot(
         arguments.output,
         arguments.qubits,
         data,
-        arguments.layers,
+        arguments.gates,
         arguments.repeats,
+        arguments.seed,
     )
     print(f"Wrote plot to {arguments.output}")
     print(f"Wrote median data to {arguments.csv}")

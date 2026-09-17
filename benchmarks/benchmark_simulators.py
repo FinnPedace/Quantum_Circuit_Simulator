@@ -2,7 +2,7 @@
 
 Run from the project root, for example:
 
-    uv run python benchmarks/benchmark_simulators.py --qubits 14 --layers 8
+    uv run python benchmarks/benchmark_simulators.py --qubits 14 --gates 100
 
 Numba compilation is performed during warm-up and is not part of the reported
 timings. Every implementation is checked against Aer's statevector first.
@@ -28,25 +28,40 @@ from quantum_circuit_simulator.simulator import StatevectorSimulator
 Runner = Callable[[], SimulationResult]
 
 
-def build_benchmark_circuit(num_qubits: int, layers: int) -> QuantumCircuit:
-    """Build a deterministic circuit containing fusion groups and CNOTs."""
+def build_random_benchmark_circuit(
+    num_qubits: int,
+    gate_count: int,
+    seed: int,
+) -> QuantumCircuit:
+    """Build a reproducible random circuit from the supported gate set."""
     if num_qubits < 2:
         raise ValueError("num_qubits must be at least 2")
-    if layers < 1:
-        raise ValueError("layers must be at least 1")
+    if gate_count < 1:
+        raise ValueError("gate_count must be at least 1")
 
+    random_generator = np.random.default_rng(seed)
     circuit = QuantumCircuit(num_qubits)
-    for layer in range(layers):
-        for qubit in range(num_qubits):
-            angle = (layer + 1) * (qubit + 1) / (num_qubits * layers)
-            # These consecutive gates form one useful fusion group per qubit.
-            circuit.rx(angle, qubit)
-            circuit.ry(-angle / 2, qubit)
-            circuit.rz(angle / 3, qubit)
+    single_qubit_gates = ("h", "x", "sx", "rx", "ry", "rz")
 
-        control = layer % num_qubits
-        target = (layer + 1) % num_qubits
-        circuit.cx(control, target)
+    for _ in range(gate_count):
+        # Most operations are single-qubit gates. CNOTs occur often enough to
+        # create realistic fusion boundaries without dominating the circuit.
+        if random_generator.random() < 0.8:
+            target = int(random_generator.integers(num_qubits))
+            gate_name = str(random_generator.choice(single_qubit_gates))
+            if gate_name in ("rx", "ry", "rz"):
+                angle = float(random_generator.uniform(-np.pi, np.pi))
+                getattr(circuit, gate_name)(angle, target)
+            else:
+                getattr(circuit, gate_name)(target)
+            continue
+
+        control, target = random_generator.choice(
+            num_qubits,
+            size=2,
+            replace=False,
+        )
+        circuit.cx(int(control), int(target))
 
     return circuit
 
@@ -119,9 +134,10 @@ def format_table(
 
 def collect_benchmark(
     num_qubits: int,
-    layers: int,
+    gate_count: int,
     repeats: int,
     warmups: int,
+    seed: int,
 ) -> tuple[QuantumCircuit, dict[str, list[float]]]:
     """Validate and measure all variants for one circuit size."""
     if repeats < 1:
@@ -129,12 +145,24 @@ def collect_benchmark(
     if warmups < 1:
         raise ValueError("warmups must be at least 1")
 
-    circuit = build_benchmark_circuit(num_qubits, layers)
-    config = SimulationConfig(shots=1, seed=42)
+    circuit = build_random_benchmark_circuit(
+        num_qubits,
+        gate_count,
+        seed,
+    )
+    config = SimulationConfig(shots=1, seed=seed)
 
-    # Construct the Aer backend and its save instruction once, just like the
-    # custom simulator objects below. Object construction is not benchmarked.
-    aer = AerSimulator(method="statevector", seed_simulator=config.seed)
+    # Use Aer as a deliberately unoptimized reference: its internal gate
+    # fusion is disabled and one worker thread prevents parallel statevector
+    # updates. Object construction is not part of the measured runtime.
+    aer = AerSimulator(
+        method="statevector",
+        fusion_enable=False,
+        max_parallel_threads=1,
+        max_parallel_experiments=1,
+        max_parallel_shots=1,
+        seed_simulator=config.seed,
+    )
     aer_circuit = circuit.copy()
     aer_circuit.save_statevector()
 
@@ -178,16 +206,18 @@ def collect_benchmark(
 
 def run_benchmark(
     num_qubits: int,
-    layers: int,
+    gate_count: int,
     repeats: int,
     warmups: int,
+    seed: int,
 ) -> None:
     """Validate, warm up, time, and print all simulator variants."""
     circuit, timings = collect_benchmark(
         num_qubits=num_qubits,
-        layers=layers,
+        gate_count=gate_count,
         repeats=repeats,
         warmups=warmups,
+        seed=seed,
     )
 
     print(
@@ -195,8 +225,8 @@ def run_benchmark(
         f"Numba {numba.__version__}"
     )
     print(
-        f"Circuit: {num_qubits} qubits, {layers} layers, "
-        f"{len(circuit.data)} gates; {repeats} measured repetitions"
+        f"Circuit: {num_qubits} qubits, {len(circuit.data)} random gates, "
+        f"seed {seed}; {repeats} measured repetitions"
     )
     print()
     print(
@@ -212,9 +242,10 @@ def parse_args() -> argparse.Namespace:
     """Parse command-line settings for a reproducible benchmark run."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--qubits", type=int, default=14)
-    parser.add_argument("--layers", type=int, default=8)
-    parser.add_argument("--repeats", type=int, default=7)
+    parser.add_argument("--gates", type=int, default=100)
+    parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--warmups", type=int, default=2)
+    parser.add_argument("--seed", type=int, default=42)
     return parser.parse_args()
 
 
@@ -222,7 +253,8 @@ if __name__ == "__main__":
     arguments = parse_args()
     run_benchmark(
         num_qubits=arguments.qubits,
-        layers=arguments.layers,
+        gate_count=arguments.gates,
         repeats=arguments.repeats,
         warmups=arguments.warmups,
+        seed=arguments.seed,
     )

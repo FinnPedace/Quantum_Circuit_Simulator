@@ -82,8 +82,12 @@ result = simulator.simulate(circuit, SimulationConfig(shots=1_000, seed=42))
 
 Der folgende End-to-End-Benchmark vergleicht Qiskit Aer mit beiden eigenen
 Backends, jeweils mit und ohne Gate Fusion. Dargestellt ist der Median aus
-sieben warmen Läufen; die Numba-JIT-Kompilierung ist nicht Teil der Messung.
-Vor jeder Messung werden alle Statevectoren gegen Aer validiert.
+fünf warmen Läufen für 4, 8, 12, 16 und 20 Qubits. Jeder Circuit enthält
+exakt 100 mit Seed 42 reproduzierbar erzeugte Gates: ungefähr 80 % zufällige
+Ein-Qubit-Gates und 20 % CNOTs. Die Numba-JIT-Kompilierung ist nicht Teil der
+Messung. Für Aer sind die interne Gate Fusion und parallele Berechnung
+deaktiviert, sodass Aer einen CPU-Thread verwendet. Vor jeder Messung werden
+alle Statevectoren gegen Aer validiert.
 
 ![Skalierungsbenchmark der Simulationsmethoden](docs/images/benchmark_simulators.png)
 
@@ -98,9 +102,10 @@ Ein einzelner Benchmark mit tabellarischer Ausgabe wird so gestartet:
 
 ```bash
 uv run python benchmarks/benchmark_simulators.py \
-    --qubits 14 \
-    --layers 8 \
-    --repeats 7 \
+    --qubits 20 \
+    --gates 100 \
+    --seed 42 \
+    --repeats 5 \
     --warmups 2
 ```
 
