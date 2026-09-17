@@ -272,24 +272,6 @@ Gate-Eingangsachsen. Ein System mit `n` Qubits besitzt `2**n` Amplituden. Die
 Anwendung eines lokalen Gates benötigt deshalb `O(2**n)` statt der ungefähr
 `O(4**n)` Operationen einer allgemeinen dichten `2**n × 2**n`-Matrix.
 
-## Benchmarking
-
-Für belastbare Laufzeitvergleiche:
-
-1. alle Implementierungen zuerst auf Korrektheit prüfen,
-2. JIT-Compiler und Backends aufwärmen,
-3. mehrere Wiederholungen messen,
-4. bevorzugt den Median statt nur des schnellsten Laufs vergleichen,
-5. Python-, NumPy-, Numba- und Hardwareversion dokumentieren,
-6. mehrere Problemgrößen testen.
-
-```bash
-# Einzelne tabellarische Messung
-uv run python benchmarks/benchmark_simulators.py
-
-# Skalierungsplot und CSV-Daten erzeugen
-uv run python benchmarks/plot_benchmarks.py
-```
 
 ## Checkliste vor einem Push
 
