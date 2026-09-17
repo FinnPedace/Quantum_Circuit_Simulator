@@ -8,7 +8,8 @@ Das Projekt benötigt:
 
 * Python 3.13 oder neuer,
 * `uv <https://docs.astral.sh/uv/>`_ zur Verwaltung der Umgebung,
-* NumPy, Qiskit, Qiskit Aer und Matplotlib als Laufzeitabhängigkeiten.
+* NumPy, Numba, Qiskit, Qiskit Aer und Matplotlib als
+  Laufzeitabhängigkeiten.
 
 Projekt installieren
 --------------------

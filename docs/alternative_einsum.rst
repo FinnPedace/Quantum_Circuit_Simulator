@@ -6,16 +6,38 @@ Zweck und Status
 
 Das Modul :mod:`quantum_circuit_simulator.alt_numpy_einsum` implementiert die
 Anwendung einer 2×2-Matrix und eines CNOT-Gates ohne ``np.einsum``. Es macht
-die Bitstruktur eines Statevectors explizit und dient als
-Korrektheitsreferenz für spätere Optimierungen.
+die Bitstruktur eines Statevectors explizit und lässt die rechenintensiven
+Schleifen durch Numba in nativen Maschinencode übersetzen.
 
 .. important::
 
-   Diese Implementierung ist derzeit nicht in den öffentlichen
-   Simulationspfad eingebunden. ``simulate()`` verwendet weiterhin die
-   ``np.einsum``-Methode aus ``StatevectorSimulator``. Die verschachtelten
-   Python-Schleifen sind voraussichtlich langsamer und sind noch kein
-   Performance-Backend.
+   Die öffentliche Funktion ``simulate()`` verwendet weiterhin die stabile
+   Voreinstellung ``einsum`` mit Gate Fusion. Das Numba-Backend wird über
+   ``StatevectorSimulator(backend="numba")`` ausgewählt und ist vor allem für
+   Tests und Benchmarks vorgesehen.
+
+Wrapper und Numba-Kernel
+------------------------
+
+Jede Operation ist in zwei Ebenen getrennt:
+
+Python-Wrapper
+   Prüft Qubitzahl, Indizes, Arrayform und Matrixform. Er stellt außerdem
+   zusammenhängende NumPy-Arrays und einen gemeinsamen Datentyp bereit.
+
+Numba-Kernel
+   Enthält nur die numerische Blockschleife. ``@njit(cache=True, nogil=True)``
+   kompiliert sie beim ersten passenden Aufruf. Nachfolgende Aufrufe verwenden
+   den gecachten Maschinencode.
+
+Die Kernel heißen intern ``_single_qubit_unitary_kernel`` und
+``_cnot_kernel``. Sie sind keine öffentliche API.
+
+.. note::
+
+   Der erste Numba-Aufruf enthält JIT-Kompilierungszeit und ist nicht mit einem
+   bereits warmen ``einsum``-Aufruf vergleichbar. Der Projektbenchmark führt
+   deshalb ungemessene Warm-up-Läufe aus; siehe :doc:`benchmarks`.
 
 Amplitudenpaare
 ---------------
@@ -134,8 +156,8 @@ Die vier Funktionen
 -------------------
 
 :func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_single_qubit_unitary`
-   Enthält den eigentlichen Algorithmus. Eingabe und Ausgabe sind flache
-   Statevectoren mit :math:`2^n` Elementen.
+   Validiert einen flachen Statevector und eine 2×2-Matrix, vereinheitlicht
+   deren Datentypen und ruft den kompilierten Ein-Qubit-Kernel auf.
 
 :func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_single_qubit_gate`
    Ist ein Adapter zum Tensorformat des Simulators. Er formt den Tensor mit
@@ -143,8 +165,9 @@ Die vier Funktionen
    Ergebnis wieder zu ``(2,) * num_qubits``.
 
 :func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_cnot_statevector`
-   Enthält die flache CNOT-Permutation. Bei Control-Bit 1 vertauscht sie die
-   beiden Amplituden eines Target-Paares.
+   Validiert die CNOT-Argumente und ruft die kompilierte flache
+   CNOT-Permutation auf. Bei Control-Bit 1 vertauscht der Kernel die beiden
+   Amplituden eines Target-Paares.
 
 :func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_cnot_gate`
    Passt die flache CNOT-Funktion an das Tensorformat des Simulators an.

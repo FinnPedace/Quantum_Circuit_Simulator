@@ -5,7 +5,8 @@ Der Quantum Circuit Simulator ist eine kleine Python-Bibliothek zur
 Statevector-Simulation von :class:`qiskit.QuantumCircuit`-Objekten. Der eigene
 Simulator verarbeitet allgemeine Ein-Qubit-Matrizen und CNOT-Gates, fusioniert
 aufeinanderfolgende Ein-Qubit-Gates und kann abschließende Messungen aus dem
-berechneten Statevector samplen.
+berechneten Statevector samplen. Intern stehen NumPy-``einsum`` und
+Numba-kompilierte Blockschleifen als numerische Backends zur Verfügung.
 
 Die Bibliothek ist vor allem als nachvollziehbare Implementierung gedacht:
 Tensorordnung, Gate Fusion, CNOT-Kontraktion und Measurement Sampling sind im
@@ -67,3 +68,4 @@ Endmessungen. Für den Bell-Circuit sind nur die Messergebnisse ``"00"`` und
 
    api
    testing
+   benchmarks

@@ -84,9 +84,9 @@ Komponenten und Verantwortung
    CNOT-Matrizen und erzeugt Counts.
 
 ``alt_numpy_einsum.py``
-   Demonstriert Ein-Qubit- und CNOT-Operationen über explizite Indexpaarung auf
-   einem flachen Statevector. Diese Funktionen sind derzeit nicht in
-   ``StatevectorSimulator`` eingebunden.
+   Implementiert Ein-Qubit- und CNOT-Operationen über Numba-kompilierte
+   Indexpaarung auf einem flachen Statevector. Der ``numba``-Backendpfad des
+   ``StatevectorSimulator`` verwendet diese Funktionen.
 
 ``aer_simulator.py``
    Delegiert Statevector und Counts an Qiskit Aer. Die Tests nutzen Aer direkt
@@ -101,6 +101,10 @@ Abhängigkeiten
 NumPy
    Zustandsarrays, Matrizen, Tensor-Kontraktion, Wahrscheinlichkeiten und
    Zufallssampling.
+
+Numba
+   JIT-Kompilierung der expliziten Ein-Qubit- und CNOT-Blockschleifen zu
+   nativem Maschinencode.
 
 Qiskit
    Circuit-Datenmodell, Operationen und Matrixdarstellungen.

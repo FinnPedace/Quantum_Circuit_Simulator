@@ -39,6 +39,11 @@ Testgruppen
    Verwendet das nicht-interaktive Matplotlib-Backend ``Agg`` und kontrolliert
    Aufbau und Titel der drei Visualisierungsachsen.
 
+``test_simulator_backends.py``
+   Prüft alle vier Kombinationen aus ``einsum``/``numba`` und Gate Fusion
+   an/aus gegen Aer. Außerdem wird kontrolliert, dass das Abschalten der Fusion
+   wirklich jede Ein-Qubit-Matrix einzeln anwendet.
+
 Statevector-Vergleich
 ---------------------
 

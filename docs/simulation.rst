@@ -33,8 +33,8 @@ Qubit umgeformt.
 3. Ein-Qubit-Kontraktion
 ------------------------
 
-Eine Ein-Qubit-Matrix :math:`U` wird entlang der Zielachse kontrahiert. Für
-Ziel-Qubit :math:`i` berechnet ``np.einsum`` konzeptionell
+Eine Ein-Qubit-Matrix :math:`U` wird entlang der Zielachse angewendet. Der
+Standardbackend ``einsum`` berechnet für Ziel-Qubit :math:`i` konzeptionell
 
 .. math::
 
@@ -47,6 +47,10 @@ Die Implementierung reserviert ``num_qubits`` als neuen symbolischen
 Ausgangsindex und ersetzt damit in den Output-Achsen die Zielachse. Durch Gate
 Fusion wird diese Kontraktion nicht zwingend für jedes einzelne Gate
 ausgeführt; siehe :doc:`gate_fusion`.
+
+Beim Backend ``numba`` wird derselbe mathematische Schritt durch eine
+JIT-kompilierte Blockschleife auf dem flachen Statevector ausgeführt. Das
+Tensorformat wird davor und danach mit ``order="F"`` umgeformt.
 
 4. CNOT-Kontraktion
 -------------------
@@ -72,7 +76,28 @@ gesetzt. Damit gilt die gewünschte Abbildung
 
 Vor einer CNOT-Kontraktion werden alle ausstehenden Ein-Qubit-Matrizen
 angewendet. Danach kontrahiert ein zweites ``np.einsum`` gleichzeitig die
-Control- und Target-Eingangsachse.
+Control- und Target-Eingangsachse. Im ``numba``-Backend ersetzt eine
+kompilierte Target-Paarschleife diese Kontraktion und vertauscht ein Paar genau
+dann, wenn sein Control-Bit gesetzt ist.
+
+Backend und Gate Fusion auswählen
+---------------------------------
+
+Die öffentliche Funktion :func:`quantum_circuit_simulator.simulate` verwendet
+weiterhin die stabile Voreinstellung ``einsum`` mit Gate Fusion. Für interne
+Vergleiche und Benchmarks kann der Simulator direkt konstruiert werden:
+
+.. code-block:: python
+
+   from quantum_circuit_simulator.simulator import StatevectorSimulator
+
+   simulator = StatevectorSimulator(
+       backend="numba",       # "einsum" oder "numba"
+       gate_fusion=False,     # True oder False
+   )
+
+Damit ergeben sich vier Eigenbauvarianten. Alle besitzen dieselbe
+``simulate(circuit, config)``-Schnittstelle.
 
 5. Barrieren und Messanweisungen
 --------------------------------

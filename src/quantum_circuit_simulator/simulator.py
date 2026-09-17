@@ -1,9 +1,11 @@
+from typing import Literal
+
 import numpy as np
 from qiskit import QuantumCircuit
 
+from .alt_numpy_einsum import apply_cnot_gate, apply_single_qubit_gate
 from .config import SimulationConfig
 from .result import SimulationResult
-
 
 CNOT_TENSOR = np.zeros((2, 2, 2, 2), dtype=complex)
 for control_input in range(2):
@@ -17,14 +19,41 @@ for control_input in range(2):
 
 
 class StatevectorSimulator:
-    @staticmethod
+    """Statevector-Simulator mit Backend-Auswahl und optionaler Gate Fusion.
+
+    :param backend: ``"einsum"`` für NumPy oder ``"numba"`` für die
+        kompilierten Blockschleifen.
+    :param gate_fusion: Fusioniert aufeinanderfolgende Ein-Qubit-Gates, wenn
+        dieser Wert wahr ist.
+    """
+
+    def __init__(
+        self,
+        *,
+        backend: Literal["einsum", "numba"] = "einsum",
+        gate_fusion: bool = True,
+    ) -> None:
+        if backend not in ("einsum", "numba"):
+            raise ValueError("backend must be 'einsum' or 'numba'")
+        self.backend = backend
+        self.gate_fusion = gate_fusion
+
     def _apply_single_qubit_gate(
+        self,
         tensor: np.ndarray,
         matrix: np.ndarray,
         target_qubit: int,
         num_qubits: int,
     ) -> np.ndarray:
         """Apply one (possibly fused) matrix to a state tensor."""
+        if self.backend == "numba":
+            return apply_single_qubit_gate(
+                tensor,
+                matrix,
+                target_qubit,
+                num_qubits,
+            )
+
         state_axes = list(range(num_qubits))
         output_index = num_qubits
         output_axes = list(state_axes)
@@ -33,6 +62,43 @@ class StatevectorSimulator:
         return np.einsum(
             matrix,
             [output_index, target_qubit],
+            tensor,
+            state_axes,
+            output_axes,
+        )
+
+    def _apply_cnot_gate(
+        self,
+        tensor: np.ndarray,
+        control_qubit: int,
+        target_qubit: int,
+        num_qubits: int,
+    ) -> np.ndarray:
+        """Apply CNOT using the selected numerical backend."""
+        if self.backend == "numba":
+            return apply_cnot_gate(
+                tensor,
+                control_qubit,
+                target_qubit,
+                num_qubits,
+            )
+
+        control_output_idx = num_qubits
+        target_output_idx = num_qubits + 1
+        state_axes = list(range(num_qubits))
+        gate_axes = [
+            control_output_idx,
+            target_output_idx,
+            control_qubit,
+            target_qubit,
+        ]
+        output_axes = list(state_axes)
+        output_axes[control_qubit] = control_output_idx
+        output_axes[target_qubit] = target_output_idx
+
+        return np.einsum(
+            CNOT_TENSOR,
+            gate_axes,
             tensor,
             state_axes,
             output_axes,
@@ -135,49 +201,34 @@ class StatevectorSimulator:
             # Strukturelle Instruktionen bilden eine Fusionsgrenze, verändern
             # den Statevector selbst aber nicht.
             if op_name in ["barrier", "measure"]:
-                tensor = self._flush_fused_gates(
-                    tensor, fused_gates, num_qubits
-                )
+                tensor = self._flush_fused_gates(tensor, fused_gates, num_qubits)
                 continue
 
             if op_name == "cx":
-                tensor = self._flush_fused_gates(
-                    tensor, fused_gates, num_qubits
-                )
+                tensor = self._flush_fused_gates(tensor, fused_gates, num_qubits)
                 control_qubit = circuit.find_bit(instruction.qubits[0]).index
                 target_qubit = circuit.find_bit(instruction.qubits[1]).index
-
-                control_output_idx = num_qubits
-                target_output_idx = num_qubits + 1
-
-                state_axes = list(range(num_qubits))
-
-                gate_axes = [
-                    control_output_idx,
-                    target_output_idx,
+                tensor = self._apply_cnot_gate(
+                    tensor,
                     control_qubit,
                     target_qubit,
-                ]
-                out_axes = list(state_axes)
-                out_axes[control_qubit] = control_output_idx
-                out_axes[target_qubit] = target_output_idx
-
-                tensor = np.einsum(
-                    CNOT_TENSOR,
-                    gate_axes,
-                    tensor,
-                    state_axes,
-                    out_axes,
+                    num_qubits,
                 )
             else:
                 target_qubit = circuit.find_bit(instruction.qubits[0]).index
                 matrix = np.asarray(op.to_matrix(), dtype=complex)
-                previous_matrix = fused_gates.get(target_qubit)
-                fused_gates[target_qubit] = (
-                    matrix
-                    if previous_matrix is None
-                    else matrix @ previous_matrix
-                )
+                if self.gate_fusion:
+                    previous_matrix = fused_gates.get(target_qubit)
+                    fused_gates[target_qubit] = (
+                        matrix if previous_matrix is None else matrix @ previous_matrix
+                    )
+                else:
+                    tensor = self._apply_single_qubit_gate(
+                        tensor,
+                        matrix,
+                        target_qubit,
+                        num_qubits,
+                    )
 
         tensor = self._flush_fused_gates(tensor, fused_gates, num_qubits)
 

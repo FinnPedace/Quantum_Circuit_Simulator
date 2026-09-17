@@ -117,7 +117,8 @@ entwickelt sich der Puffer so:
 Abgrenzung zur alternativen Implementierung
 --------------------------------------------
 
-Gate Fusion entscheidet, **welche Matrix** angewendet wird. Die numerische
-Backend-Funktion entscheidet, **wie diese Matrix** auf den Zustand wirkt. Der
-produktive Pfad verwendet dafür aktuell ``np.einsum``. Die explizite
-Blockschleife aus :doc:`alternative_einsum` ist noch nicht angeschlossen.
+Gate Fusion entscheidet, **welche Matrix** angewendet wird. Das gewählte
+Backend entscheidet, **wie diese Matrix** auf den Zustand wirkt. ``einsum``
+verwendet eine NumPy-Tensorkontraktion; ``numba`` verwendet die kompilierten
+Blockschleifen aus :doc:`alternative_einsum`. Beide Backends können unabhängig
+von der Fusion ein- oder ausgeschaltet verglichen werden.

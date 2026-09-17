@@ -72,9 +72,7 @@ def cnot_einsum_reference(
 def test_all_target_qubits_match_einsum(num_qubits: int) -> None:
     """The explicit pair loops match einsum for every possible target."""
     rng = np.random.default_rng(100 + num_qubits)
-    statevector = rng.normal(size=2**num_qubits) + 1j * rng.normal(
-        size=2**num_qubits
-    )
+    statevector = rng.normal(size=2**num_qubits) + 1j * rng.normal(size=2**num_qubits)
     matrix = rng.normal(size=(2, 2)) + 1j * rng.normal(size=(2, 2))
 
     for target_qubit in range(num_qubits):
@@ -135,9 +133,7 @@ def test_tensor_wrapper_preserves_simulator_shape_and_order() -> None:
 def test_cnot_matches_einsum_for_all_qubit_pairs(num_qubits: int) -> None:
     """Every ordered control/target combination matches the CNOT tensor."""
     rng = np.random.default_rng(200 + num_qubits)
-    statevector = rng.normal(size=2**num_qubits) + 1j * rng.normal(
-        size=2**num_qubits
-    )
+    statevector = rng.normal(size=2**num_qubits) + 1j * rng.normal(size=2**num_qubits)
 
     for control_qubit in range(num_qubits):
         for target_qubit in range(num_qubits):
