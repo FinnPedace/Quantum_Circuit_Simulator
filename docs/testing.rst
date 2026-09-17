@@ -31,8 +31,9 @@ Testgruppen
 ``test_alt_numpy_einsum.py``
    Vergleicht die explizite Blockschleife für verschiedene Qubitzahlen und
    alle möglichen Ziel-Qubits mit der bestehenden ``np.einsum``-Konvention.
-   Zusätzlich werden konkrete Indexpaarung, unveränderte Eingabe und der
-   Tensoradapter geprüft.
+   Für CNOT werden sämtliche geordneten Control-/Target-Kombinationen geprüft.
+   Zusätzlich werden konkrete Indexpaarung, Control-Semantik, unveränderte
+   Eingaben, ungültige Argumente und beide Tensoradapter getestet.
 
 ``test_visualization.py``
    Verwendet das nicht-interaktive Matplotlib-Backend ``Agg`` und kontrolliert

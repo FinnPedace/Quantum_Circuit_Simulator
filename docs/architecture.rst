@@ -84,8 +84,8 @@ Komponenten und Verantwortung
    CNOT-Matrizen und erzeugt Counts.
 
 ``alt_numpy_einsum.py``
-   Demonstriert dieselbe Ein-Qubit-Operation über explizite Indexpaarung auf
-   einem flachen Statevector. Diese Funktion ist derzeit nicht in
+   Demonstriert Ein-Qubit- und CNOT-Operationen über explizite Indexpaarung auf
+   einem flachen Statevector. Diese Funktionen sind derzeit nicht in
    ``StatevectorSimulator`` eingebunden.
 
 ``aer_simulator.py``

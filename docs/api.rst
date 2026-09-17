@@ -41,9 +41,13 @@ Implementierungsdetails, Tests und Referenzvergleiche dokumentiert.
 .. autoclass:: quantum_circuit_simulator.aer_simulator.AerSimulatorWrapper
    :members: simulate
 
-Alternative Ein-Qubit-Funktionen
---------------------------------
+Alternative Statevector-Funktionen
+----------------------------------
 
 .. autofunction:: quantum_circuit_simulator.alt_numpy_einsum.apply_single_qubit_unitary
 
 .. autofunction:: quantum_circuit_simulator.alt_numpy_einsum.apply_single_qubit_gate
+
+.. autofunction:: quantum_circuit_simulator.alt_numpy_einsum.apply_cnot_statevector
+
+.. autofunction:: quantum_circuit_simulator.alt_numpy_einsum.apply_cnot_gate

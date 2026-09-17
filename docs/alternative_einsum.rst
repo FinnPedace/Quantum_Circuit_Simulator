@@ -1,13 +1,13 @@
-Alternative Ein-Qubit-Anwendung
-===============================
+Alternative Statevector-Operationen
+===================================
 
 Zweck und Status
 ----------------
 
 Das Modul :mod:`quantum_circuit_simulator.alt_numpy_einsum` implementiert die
-Anwendung einer 2×2-Matrix ohne ``np.einsum``. Es macht die Bitstruktur eines
-Statevectors explizit und dient als Korrektheitsreferenz für spätere
-Optimierungen.
+Anwendung einer 2×2-Matrix und eines CNOT-Gates ohne ``np.einsum``. Es macht
+die Bitstruktur eines Statevectors explizit und dient als
+Korrektheitsreferenz für spätere Optimierungen.
 
 .. important::
 
@@ -98,8 +98,40 @@ transformiert:
 Die Funktion schreibt in einen neu angelegten Ergebnisvektor und verändert den
 Eingabevektor nicht.
 
-Die beiden Funktionen
-----------------------
+CNOT mit derselben Blockstruktur
+--------------------------------
+
+Auch die CNOT-Implementierung teilt den Vektor anhand des Target-Qubits in
+Blöcke und bildet jeweils ``target_zero_index`` und ``target_one_index``. Da
+Control und Target verschieden sein müssen, besitzen beide Partner dasselbe
+Control-Bit.
+
+Die Control-Maske lautet
+
+.. code-block:: python
+
+   control_bit_mask = 1 << control_qubit
+   control_is_one = bool(target_zero_index & control_bit_mask)
+
+Für jedes Target-Paar gibt es damit zwei Fälle:
+
+``control_is_one`` ist falsch
+   Das CNOT wirkt wie die Identität. Beide Amplituden werden unverändert in den
+   Ergebnisvektor kopiert.
+
+``control_is_one`` ist wahr
+   Das Target-Bit wird gekippt. Die Amplitude mit Target-Bit 0 und die
+   Amplitude mit Target-Bit 1 werden vertauscht.
+
+Für einen Basiszustand mit Index :math:`k` entspricht die CNOT-Abbildung bei
+gesetztem Control-Bit also
+
+.. math::
+
+   k \mapsto k \oplus 2^{\text{target}}.
+
+Die vier Funktionen
+-------------------
 
 :func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_single_qubit_unitary`
    Enthält den eigentlichen Algorithmus. Eingabe und Ausgabe sind flache
@@ -109,6 +141,13 @@ Die beiden Funktionen
    Ist ein Adapter zum Tensorformat des Simulators. Er formt den Tensor mit
    ``order="F"`` zum Vektor um, ruft die erste Funktion auf und formt das
    Ergebnis wieder zu ``(2,) * num_qubits``.
+
+:func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_cnot_statevector`
+   Enthält die flache CNOT-Permutation. Bei Control-Bit 1 vertauscht sie die
+   beiden Amplituden eines Target-Paares.
+
+:func:`~quantum_circuit_simulator.alt_numpy_einsum.apply_cnot_gate`
+   Passt die flache CNOT-Funktion an das Tensorformat des Simulators an.
 
 Validierung
 -----------
@@ -122,3 +161,6 @@ Die Kernfunktion prüft:
 * eine Matrix der Form ``(2, 2)``.
 
 Sie prüft nicht numerisch, ob die Matrix tatsächlich unitär ist.
+
+Die CNOT-Kernfunktion prüft zusätzlich, dass mindestens zwei Qubits vorhanden
+sind und dass Control und Target gültige, unterschiedliche Qubit-Indizes sind.

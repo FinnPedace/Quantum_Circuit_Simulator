@@ -87,6 +87,83 @@ def apply_single_qubit_unitary(
     return result
 
 
+def apply_cnot_statevector(
+    statevector: np.ndarray,
+    control_qubit: int,
+    target_qubit: int,
+    num_qubits: int,
+) -> np.ndarray:
+    """Wende ein CNOT-Gate auf einen flachen Qiskit-Statevector an.
+
+    Der Statevector wird wie bei der Ein-Qubit-Funktion in Blöcke bezüglich
+    des Target-Qubits aufgeteilt. Innerhalb jedes Blocks bilden die Einträge
+    mit Target-Bit 0 und 1 jeweils ein Paar. Ist das Control-Bit dieses Paares
+    1, werden die beiden Amplituden vertauscht. Bei Control-Bit 0 bleiben sie
+    unverändert.
+
+    Die Funktion gibt einen neuen Statevector zurück und verändert die Eingabe
+    nicht.
+    """
+    statevector = np.asarray(statevector)
+
+    if num_qubits < 2:
+        raise ValueError("num_qubits must be at least 2 for a CNOT gate")
+    if not 0 <= control_qubit < num_qubits:
+        raise ValueError(
+            f"control_qubit must be between 0 and {num_qubits - 1}"
+        )
+    if not 0 <= target_qubit < num_qubits:
+        raise ValueError(
+            f"target_qubit must be between 0 and {num_qubits - 1}"
+        )
+    if control_qubit == target_qubit:
+        raise ValueError("control_qubit and target_qubit must be different")
+    if statevector.ndim != 1:
+        raise ValueError("statevector must be one-dimensional")
+
+    expected_size = 1 << num_qubits
+    if statevector.size != expected_size:
+        raise ValueError(
+            f"statevector must contain {expected_size} amplitudes"
+        )
+
+    # CNOT permutiert nur vorhandene Amplituden. Der Ergebnisvektor kann daher
+    # exakt denselben Datentyp wie der Eingabevektor verwenden.
+    result = np.empty_like(statevector)
+
+    # Die Blockaufteilung richtet sich nach dem Target-Qubit. Zwei Zustände,
+    # die sich nur im Target-Bit unterscheiden, liegen 2**target_qubit Plätze
+    # auseinander.
+    pair_distance = 1 << target_qubit
+    block_size = pair_distance << 1
+
+    # Mit dieser Maske lässt sich prüfen, ob das Control-Bit eines Index 1 ist.
+    # Beispiel für control_qubit = 2: 1 << 2 ergibt binär 100.
+    control_bit_mask = 1 << control_qubit
+
+    for block_start in range(0, expected_size, block_size):
+        for offset in range(pair_distance):
+            # Das Paar unterscheidet sich ausschließlich im Target-Qubit.
+            target_zero_index = block_start + offset
+            target_one_index = target_zero_index + pair_distance
+
+            # Weil Control und Target verschieden sind, besitzen beide Indizes
+            # dasselbe Control-Bit. Es reicht daher, den ersten zu prüfen.
+            control_is_one = bool(target_zero_index & control_bit_mask)
+
+            if control_is_one:
+                # Control = 1: CNOT kippt das Target-Bit. Im Statevector
+                # entspricht das dem Vertauschen der beiden Amplituden.
+                result[target_zero_index] = statevector[target_one_index]
+                result[target_one_index] = statevector[target_zero_index]
+            else:
+                # Control = 0: CNOT wirkt wie die Identität.
+                result[target_zero_index] = statevector[target_zero_index]
+                result[target_one_index] = statevector[target_one_index]
+
+    return result
+
+
 def apply_single_qubit_gate(
     tensor: np.ndarray,
     matrix: np.ndarray,
@@ -122,4 +199,38 @@ def apply_single_qubit_gate(
     return np.reshape(result, expected_shape, order="F")
 
 
-__all__ = ["apply_single_qubit_gate", "apply_single_qubit_unitary"]
+def apply_cnot_gate(
+    tensor: np.ndarray,
+    control_qubit: int,
+    target_qubit: int,
+    num_qubits: int,
+) -> np.ndarray:
+    """Passe die flache CNOT-Implementierung an das Tensorformat an.
+
+    Diese Funktion hat dieselbe Aufgabe wie ``apply_single_qubit_gate``: Sie
+    formt den Zustandstensor zum flachen Statevector um, führt dort die
+    Blockschleife aus und stellt anschließend die ursprüngliche Tensorform
+    wieder her.
+    """
+    tensor = np.asarray(tensor)
+    expected_shape = (2,) * num_qubits
+    if tensor.shape != expected_shape:
+        raise ValueError(f"tensor must have shape {expected_shape}")
+
+    # order="F" erhält die Zuordnung Tensorachse i <-> Qiskit-Qubit i.
+    statevector = np.reshape(tensor, -1, order="F")
+    result = apply_cnot_statevector(
+        statevector,
+        control_qubit,
+        target_qubit,
+        num_qubits,
+    )
+    return np.reshape(result, expected_shape, order="F")
+
+
+__all__ = [
+    "apply_cnot_gate",
+    "apply_cnot_statevector",
+    "apply_single_qubit_gate",
+    "apply_single_qubit_unitary",
+]
