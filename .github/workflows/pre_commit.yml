@@ -1,0 +1,50 @@
+# Anzeigename des Workflows im GitHub-Actions-Tab.
+name: pre-commit
+
+# Ereignisse, bei denen GitHub den Workflow startet.
+on:
+  # Führt den Workflow bei einem Push auf einen passenden Branch aus.
+  # Das Muster "*" erfasst keine Branch-Namen mit einem Schrägstrich.
+  push:
+    branches: ["*"]
+
+jobs:
+  # Einziger Job des Workflows. Seine interne ID lautet "pre-commit".
+  pre-commit:
+    # GitHub stellt dafür eine temporäre Ubuntu-Maschine bereit.
+    runs-on: ubuntu-latest
+
+    # Bricht den Job ab, falls er länger als 15 Minuten läuft.
+    timeout-minutes: 15
+
+    steps:
+      # Lädt das Repository auf den Runner. Erst danach sind der Quellcode und
+      # die Datei .pre-commit-config.yaml für die folgenden Schritte vorhanden.
+      - uses: actions/checkout@v7
+
+      # Installiert die zum Projekt passende Python-Version. Pre-Commit nutzt
+      # sie zum Einrichten und Ausführen seiner isolierten Hook-Umgebungen.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      # Installiert Pre-Commit und führt alle Hooks aus
+      # .pre-commit-config.yaml auf sämtlichen Repository-Dateien aus.
+      - uses: pre-commit/action@v3.0.1
+
+      # Dieser Schritt läuft nur, wenn zuvor ein Schritt fehlgeschlagen ist.
+      # Formatierende Hooks wie Black können Dateien auf dem Runner ändern.
+      # "git diff" speichert diese Änderungen als format.patch. Wenn der Patch
+      # Änderungen enthält, wird er ausgegeben und der Schritt bleibt durch
+      # "false" absichtlich fehlgeschlagen.
+      - run: git diff --output=format.patch --exit-code || { cat format.patch; false; }
+        if: failure()
+
+      # Lädt format.patch bei einem Fehler als GitHub-Artifact hoch. Der Patch
+      # kann aus dem Workflow-Lauf heruntergeladen und anschließend lokal mit
+      # "git apply format.patch" angewendet werden.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: format.patch
+          path: format.patch
