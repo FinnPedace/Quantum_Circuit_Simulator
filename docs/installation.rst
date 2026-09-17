@@ -1,30 +1,60 @@
 Installation
 ============
 
-Requirements
-------------
+Voraussetzungen
+---------------
 
-Python 3.13 or later and `uv <https://docs.astral.sh/uv/>`_ are required.
+Das Projekt benötigt:
 
-Install the project
--------------------
+* Python 3.13 oder neuer,
+* `uv <https://docs.astral.sh/uv/>`_ zur Verwaltung der Umgebung,
+* NumPy, Qiskit, Qiskit Aer und Matplotlib als Laufzeitabhängigkeiten.
 
-Clone the repository and, from its root directory, install the project and
-its dependencies:
+Projekt installieren
+--------------------
+
+Nach dem Klonen werden im Projektverzeichnis die Laufzeitabhängigkeiten
+installiert:
 
 .. code-block:: console
 
    uv sync
 
-To install the development dependencies as well (including Sphinx and pytest),
-run:
+Für Tests und Dokumentation wird zusätzlich die Development-Gruppe benötigt:
 
 .. code-block:: console
 
    uv sync --group dev
 
-You can then run the test suite with:
+Installation prüfen
+-------------------
+
+Ein kurzer Importtest zeigt die installierte öffentliche API:
+
+.. code-block:: console
+
+   uv run python -c "import quantum_circuit_simulator as qcs; print(qcs.__all__)"
+
+Die vollständige Testsuite wird so gestartet:
 
 .. code-block:: console
 
    uv run pytest
+
+Sphinx-Dokumentation bauen
+--------------------------
+
+Unter Linux und macOS:
+
+.. code-block:: console
+
+   uv run sphinx-build -M html docs docs/_build
+
+Alternativ kann im Verzeichnis ``docs`` das Makefile verwendet werden:
+
+.. code-block:: console
+
+   uv run make -C docs html
+
+Unter Windows steht zusätzlich ``docs/make.bat`` zur Verfügung. Die erzeugte
+Startseite befindet sich anschließend unter ``docs/_build/html/index.html``.

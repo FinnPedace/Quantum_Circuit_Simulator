@@ -1,28 +1,29 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""Sphinx configuration for the project documentation."""
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+from pathlib import Path
+import sys
+
+
+# Make the src-layout package importable when Sphinx is invoked directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 project = "Quantum Circuit Simulator"
 copyright = "2026, Finn Pedace and Jannis Schuhmacher"
 author = "Finn Pedace and Jannis Schuhmacher"
 release = "0.1.0"
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
-extensions = ["sphinx.ext.autosummary"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+]
 autosummary_generate = True
+autodoc_member_order = "bysource"
+autodoc_typehints = "description"
 
-templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+language = "de"
 
 html_theme = "alabaster"
-html_static_path = ["_static"]
+html_title = f"{project} {release}"

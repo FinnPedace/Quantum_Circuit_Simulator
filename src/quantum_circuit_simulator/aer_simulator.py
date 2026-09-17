@@ -4,7 +4,10 @@ from .config import SimulationConfig
 from .result import SimulationResult
 
 class AerSimulatorWrapper:
+    """Referenzwrapper, der Statevector und Counts durch Qiskit Aer berechnet."""
+
     def simulate(self, circuit: QuantumCircuit, config: SimulationConfig) -> SimulationResult:
+        """Simuliere ``circuit`` mit dem Aer-Statevector-Backend."""
         # 1. Statevector vor der Messung extrahieren
         sv_circ = circuit.remove_final_measurements(inplace=False)
         sv_circ.save_statevector()

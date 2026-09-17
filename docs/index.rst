@@ -1,14 +1,69 @@
-.. Quantum Circuit Simulator documentation master file, created by
-   sphinx-quickstart on Wed Sep 16 12:24:44 2026.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Quantum Circuit Simulator
+=========================
 
-Quantum Circuit Simulator documentation
-=======================================
+Der Quantum Circuit Simulator ist eine kleine Python-Bibliothek zur
+Statevector-Simulation von :class:`qiskit.QuantumCircuit`-Objekten. Der eigene
+Simulator verarbeitet allgemeine Ein-Qubit-Matrizen und CNOT-Gates, fusioniert
+aufeinanderfolgende Ein-Qubit-Gates und kann abschließende Messungen aus dem
+berechneten Statevector samplen.
+
+Die Bibliothek ist vor allem als nachvollziehbare Implementierung gedacht:
+Tensorordnung, Gate Fusion, CNOT-Kontraktion und Measurement Sampling sind im
+Quellcode getrennt erkennbar und werden gegen Qiskit Aer getestet.
+
+Ein minimales Beispiel
+----------------------
+
+.. code-block:: python
+
+   from qiskit import QuantumCircuit
+   from quantum_circuit_simulator import SimulationConfig, simulate
+
+   circuit = QuantumCircuit(2)
+   circuit.h(0)
+   circuit.cx(0, 1)
+   circuit.measure_all()
+
+   result = simulate(
+       circuit,
+       SimulationConfig(shots=1_000, seed=42),
+   )
+
+   print(result.statevector)
+   print(result.counts)
+
+Der zurückgegebene Statevector beschreibt immer den Zustand vor den
+Endmessungen. Für den Bell-Circuit sind nur die Messergebnisse ``"00"`` und
+``"11"`` möglich.
+
+.. note::
+
+   Der Simulator ist kein vollständiger Ersatz für Qiskit Aer. Unterstützt
+   werden Ein-Qubit-Operationen mit einer 2×2-Matrix, ``cx``, Barrieren und
+   vollständige Endmessungen. Die genauen Grenzen stehen unter
+   :doc:`supported_operations`.
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
+   :caption: Benutzung
 
-   installation.rst
-   api.rst
+   installation
+   quickstart
+   supported_operations
+   visualization
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Implementierung
+
+   architecture
+   simulation
+   gate_fusion
+   alternative_einsum
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Referenz und Entwicklung
+
+   api
+   testing

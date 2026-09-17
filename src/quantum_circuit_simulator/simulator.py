@@ -17,6 +17,8 @@ for control_input in range(2):
 
 
 class StatevectorSimulator:
+    """Eigener Tensor-basierter Simulator für den unterstützten Gate-Satz."""
+
     @staticmethod
     def _apply_single_qubit_gate(
         tensor: np.ndarray,
