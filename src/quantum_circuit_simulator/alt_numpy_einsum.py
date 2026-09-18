@@ -64,9 +64,7 @@ def _cnot_kernel(
             # Das Control-Bit ist die Ziffer an der Stelle 2**control_qubit
             # in der Binaerdarstellung des Index. Division und Modulo machen
             # diese Abfrage ohne bitweise Operatoren explizit.
-            control_bit_value = (
-                target_zero_index // control_bit_place_value
-            ) % 2
+            control_bit_value = (target_zero_index // control_bit_place_value) % 2
             if control_bit_value == 1:
                 # Control = 1: Das Target-Bit wird gekippt, also werden die
                 # beiden Amplituden des Target-Paares vertauscht.
