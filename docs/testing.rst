@@ -57,9 +57,6 @@ vergleichen anschließend
    |\psi_\text{actual}\rangle
    \approx e^{i\phi}|\psi_\text{expected}\rangle.
 
-Eine absolute Toleranz von ungefähr ``1e-12`` fängt normale
-Gleitkomma-Rundungsreste ab.
-
 Counts testen
 -------------
 
@@ -69,29 +66,3 @@ Shotzahl entspricht. Zufällige Counts verschiedener Simulatoren sollten nicht
 blind Eintrag für Eintrag verglichen werden, weil unterschiedliche
 Zufallszahlengeneratoren trotz gleicher Verteilung andere Samples liefern
 können.
-
-Dokumentation prüfen
---------------------
-
-Warnungen sollten beim Sphinx-Build als Fehler behandelt werden:
-
-.. code-block:: console
-
-   uv run sphinx-build -W --keep-going -b html docs docs/_build/html
-
-Damit werden unter anderem ungültige Querverweise, fehlerhafte RST-Strukturen
-und Probleme beim Import der API sichtbar.
-
-Neue Funktionalität absichern
------------------------------
-
-Bei neuen Gates oder Backends sollten mindestens folgende Eigenschaften
-getestet werden:
-
-* Abgleich des Statevectors mit einer unabhängigen Aer-Referenz;
-* alle zulässigen Ziel-Qubit-Positionen, nicht nur ``q0``;
-* Circuit-Grenzen wie CNOT, Barriere und Messung;
-* ungültige Eingaben und erwarteter Fehlertyp;
-* unveränderte öffentliche Semantik von ``SimulationResult``;
-* bei Optimierungen zusätzlich ein separater Benchmark außerhalb der
-  Korrektheitstests.

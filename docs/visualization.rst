@@ -4,7 +4,7 @@ Visualisierung
 Die Funktion :func:`quantum_circuit_simulator.plot_simulation_result` stellt
 drei Aspekte einer Simulation in einer Matplotlib-Figure dar:
 
-1. den eingegebenen Circuit als Textzeichnung,
+1. den eingegebenen Circuit als schematische Zeichnung,
 2. Amplituden und Wahrscheinlichkeiten des Statevectors,
 3. die gesampelten Measurement Counts.
 
@@ -40,23 +40,5 @@ Rückgabewert
 ------------
 
 Die Funktion gibt immer die erzeugte :class:`matplotlib.figure.Figure` zurück.
-Damit können Achsen, Beschriftungen und Ausgabeformat nachträglich angepasst
+Damit können bei Bedarf Achsen, Beschriftungen und Ausgabeformat nachträglich angepasst
 werden.
-
-Ohne Messung
-------------
-
-Ist ``result.counts`` gleich ``None``, bleibt die dritte Achse ohne
-Balkendiagramm und zeigt einen entsprechenden Hinweis. Statevector und Circuit
-werden weiterhin dargestellt.
-
-Grenzen
--------
-
-Die Zahl der Statevector-Balken beträgt :math:`2^n`. Schon bei moderaten
-Qubitzahlen wird die Abbildung deshalb breit und schwer lesbar. Die Funktion
-ist zur Inspektion kleiner Lehr- und Testcircuits gedacht, nicht zur
-Visualisierung großer Simulationen.
-
-Ein ausführbares Zufallsbeispiel liegt unter
-``playground/visualize_random_circuit.py``.

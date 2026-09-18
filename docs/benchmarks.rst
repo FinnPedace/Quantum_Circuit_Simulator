@@ -15,10 +15,9 @@ Simulationsaufruf für fünf Varianten:
 * Numba mit Gate Fusion.
 
 Für jede Qubitzahl wird ein reproduzierbarer Zufallscircuit mit exakt 100
-Gates erzeugt. Mit einer Wahrscheinlichkeit von 80 % wird eines der
-Ein-Qubit-Gates ``h``, ``x``, ``sx``, ``rx``, ``ry`` oder ``rz`` auf ein
+Gates erzeugt. Mit einer Wahrscheinlichkeit von 80 % wird ein Ein-Qubit-Gates auf ein
 zufälliges Qubit angewendet. Die übrigen 20 % sind CNOTs mit verschiedenen,
-zufällig gewählten Control- und Target-Qubits. Der feste Seed 42 macht die
+zufällig gewählten Control- und Target-Qubits. Ein fixer Seed macht die
 Circuits und damit den Vergleich reproduzierbar.
 
 Backendobjekte und die Aer-``save_statevector``-Instruktion werden vor der
@@ -80,8 +79,7 @@ Parameter können über die Kommandozeile verändert werden:
    Zahl der gemessenen vollständigen Simulationsläufe.
 
 ``--warmups``
-   Zahl der ungemessenen Aufwärmläufe pro Variante. Mindestens ein Warm-up ist
-   erforderlich.
+   Zahl der ungemessenen Aufwärmläufe pro Variante.
 
 Korrektheitsprüfung
 -------------------

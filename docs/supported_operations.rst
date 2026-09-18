@@ -8,13 +8,10 @@ Der eigene Simulator akzeptiert aktuell:
 
 Ein-Qubit-Gates
    Eine Operation wird akzeptiert, wenn sie ``to_matrix()`` anbietet und die
-   zurückgegebene Matrix die Form ``(2, 2)`` besitzt. Beispiele sind ``x``,
-   ``y``, ``z``, ``h``, ``s``, ``sx``, ``rx``, ``ry``, ``rz`` und ein
-   passendes :class:`qiskit.circuit.library.UnitaryGate`.
+   zurückgegebene Matrix die Form ``(2, 2)`` besitzt.
 
 ``cx``
-   CNOT ist das einzige explizit implementierte Zwei-Qubit-Gate. Control und
-   Target dürfen auch nicht benachbart sein.
+   CNOT ist das einzige explizit implementierte Zwei-Qubit-Gate.
 
 ``barrier``
    Eine Barriere verändert den Zustand nicht, beendet aber eine laufende
@@ -35,7 +32,7 @@ Unter anderem werden abgelehnt:
 * Gates nach der ersten Messung;
 * mehrere Classical Registers;
 * Reset, Noise-Modelle und nicht-unitäre Kanäle;
-* klassisch konditionierte Gates und dynamische Circuits;
+* dynamische Circuits;
 * beliebige Initialzustände -- die Simulation startet immer in
   :math:`|0\ldots0\rangle`.
 
@@ -76,19 +73,3 @@ Konfiguration
 
 Die Dataclass selbst prüft die Werte derzeit nicht. Ungeeignete Werte, etwa
 negative ``shots``, führen erst beim NumPy-Sampling zu einem Fehler.
-
-Skalierung
-----------
-
-Ein Statevector für :math:`n` Qubits besitzt :math:`2^n` komplexe Einträge.
-Speicherbedarf und Gate-Anwendung wachsen daher exponentiell mit der Anzahl
-der Qubits. Die Visualisierung erzeugt zusätzlich ein Label und einen Balken
-pro Basiszustand und ist nur für kleine Systeme sinnvoll.
-
-Numerische Genauigkeit
-----------------------
-
-Berechnungen verwenden komplexe NumPy-Gleitkommazahlen. Mathematisch
-verschwindende Amplituden können deshalb kleine Rundungsreste enthalten. Beim
-Vergleich von Statevectoren sollte eine Toleranz verwendet und eine mögliche
-globale Phase berücksichtigt werden.

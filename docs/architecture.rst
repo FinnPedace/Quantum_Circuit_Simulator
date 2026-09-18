@@ -18,7 +18,7 @@ Das Projekt verwendet ein ``src``-Layout:
    ├── alt_numpy_einsum.py     alternative Ein-Qubit-Referenz
    └── visualization.py        Matplotlib-Ausgabe
 
-Öffentlicher Datenfluss
+Datenfluss
 -----------------------
 
 .. code-block:: text
@@ -45,8 +45,7 @@ Die öffentliche Funktion in ``api.py`` instanziiert aktuell immer den eigenen
 :class:`~quantum_circuit_simulator.simulator.StatevectorSimulator`. Der
 :class:`~quantum_circuit_simulator.aer_simulator.AerSimulatorWrapper` ist noch
 im Paket vorhanden, wird aber nicht von :func:`quantum_circuit_simulator.simulate`
-aufgerufen. Er dient als Referenz zur Entwicklung und zum Verständnis der
-erwarteten Semantik.
+aufgerufen.
 
 Konfigurations- und Ergebnisobjekte
 -----------------------------------
@@ -54,8 +53,7 @@ Konfigurations- und Ergebnisobjekte
 :class:`~quantum_circuit_simulator.SimulationConfig` und
 :class:`~quantum_circuit_simulator.SimulationResult` sind eingefrorene
 Dataclasses. Ihre Felder können nach der Konstruktion nicht neu zugewiesen
-werden. Das NumPy-Array innerhalb eines Resultats ist dadurch allerdings nicht
-automatisch schreibgeschützt.
+werden.
 
 Interne Darstellungen
 ---------------------
@@ -73,11 +71,11 @@ Die Fortran-Ordnung ist Teil der fachlichen Konvention: Tensorachse ``i``
 entspricht Qiskit-Qubit ``i``. Ohne ``order="F"`` würden Gate-Ziel und
 Bitposition nicht mehr übereinstimmen.
 
-Komponenten und Verantwortung
+Zentrale Komponenten
 -----------------------------
 
 ``api.py``
-   Stabile öffentliche Fassade. Ergänzt bei Bedarf die Standardkonfiguration.
+   Stellt die öffentlich nutzbaren Funktionen des Simulators bereit.
 
 ``simulator.py``
    Validiert den Circuit, verwaltet Gate Fusion, kontrahiert Ein-Qubit- und
@@ -93,9 +91,9 @@ Komponenten und Verantwortung
    als unabhängige Referenz.
 
 ``visualization.py``
-   Verbraucht Circuit und Resultat, verändert die Simulation aber nicht.
+   Visualisiert den Circuit und das Resultat.
 
-Abhängigkeiten
+Python-Pakete
 --------------
 
 NumPy

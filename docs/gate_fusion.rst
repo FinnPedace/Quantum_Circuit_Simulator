@@ -47,7 +47,7 @@ Gates auf verschiedenen Qubits
 ------------------------------
 
 Innerhalb eines Abschnitts speichert das Dictionary eine Matrix pro Qubit.
-Ein-Qubit-Operationen auf verschiedenen Qubits können in beliebiger
+Ein-Qubit-Operationen auf **verschiedenen** Qubits können in beliebiger
 Reihenfolge auf den Zustand angewendet werden, weil sie auf unterschiedlichen
 Tensorfaktoren wirken und miteinander kommutieren.
 

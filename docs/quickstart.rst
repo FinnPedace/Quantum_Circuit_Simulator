@@ -39,8 +39,6 @@ Simulation ohne Messung
    assert np.allclose(np.abs(result.statevector) ** 2, [0.5, 0.5])
    assert result.counts is None
 
-Ohne Classical Bits wird nicht gesampelt und ``counts`` bleibt ``None``.
-
 Simulation mit Endmessung
 -------------------------
 
@@ -79,7 +77,7 @@ Das Resultat verstehen
 Qiskit-Basisordnung
 -------------------
 
-Der Statevector verwendet Qiskits Little-Endian-Konvention. Für drei Qubits
+Der Statevector verwendet Qiskits Konvention. Für drei Qubits
 wird der Basiszustand als
 
 .. math::

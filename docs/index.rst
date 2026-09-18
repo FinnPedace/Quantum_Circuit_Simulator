@@ -9,10 +9,10 @@ berechneten Statevector samplen. Intern stehen NumPy-``einsum`` und
 Numba-kompilierte Blockschleifen als numerische Backends zur Verfügung.
 
 Die Bibliothek ist vor allem als nachvollziehbare Implementierung gedacht:
-Tensorordnung, Gate Fusion, CNOT-Kontraktion und Measurement Sampling sind im
+Tensorkontraktion, Gate Fusion, CNOT-Kontraktion und Measurement Sampling sind im
 Quellcode getrennt erkennbar und werden gegen Qiskit Aer getestet.
 
-Ein minimales Beispiel
+Ein kleines Beispiel
 ----------------------
 
 .. code-block:: python
@@ -34,14 +34,12 @@ Ein minimales Beispiel
    print(result.counts)
 
 Der zurückgegebene Statevector beschreibt immer den Zustand vor den
-Endmessungen. Für den Bell-Circuit sind nur die Messergebnisse ``"00"`` und
-``"11"`` möglich.
+Endmessungen. 
 
 .. note::
 
-   Der Simulator ist kein vollständiger Ersatz für Qiskit Aer. Unterstützt
-   werden Ein-Qubit-Operationen mit einer 2×2-Matrix, ``cx``, Barrieren und
-   vollständige Endmessungen. Die genauen Grenzen stehen unter
+   Unterstützt werden Ein-Qubit-Operationen mit einer 2×2-Matrix, ``cx``, Barrieren und
+   vollständige Endmessungen. Die genauen Limitierungen stehen unter
    :doc:`supported_operations`.
 
 .. toctree::

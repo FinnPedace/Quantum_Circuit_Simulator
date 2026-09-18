@@ -13,8 +13,7 @@ der Messphase, ``cx`` wird explizit erlaubt und andere Operationen müssen eine
 2×2-Matrix liefern.
 
 Nach der ersten Messung sind nur weitere Messungen oder Barrieren zulässig.
-Sobald überhaupt gemessen wird, muss die Menge der gemessenen Qubits alle
-Circuit-Qubits enthalten.
+Gemessen werden entweder alle Qubits oder gar keine.
 
 2. Startzustand
 ---------------
@@ -68,7 +67,7 @@ Für jeden binären Eingang :math:`(c,t)` wird genau der Eintrag
 
    C[c,\,t\oplus c,\,c,\,t] = 1
 
-gesetzt. Damit gilt die gewünschte Abbildung
+gesetzt. Damit gilt die Abbildung
 
 .. math::
 
@@ -84,7 +83,7 @@ Backend und Gate Fusion auswählen
 ---------------------------------
 
 Die öffentliche Funktion :func:`quantum_circuit_simulator.simulate` verwendet
-weiterhin die stabile Voreinstellung ``einsum`` mit Gate Fusion. Für interne
+weiterhin die Voreinstellung ``einsum`` mit Gate Fusion. Für interne
 Vergleiche und Benchmarks kann der Simulator direkt konstruiert werden:
 
 .. code-block:: python
@@ -103,8 +102,8 @@ Damit ergeben sich vier Eigenbauvarianten. Alle besitzen dieselbe
 --------------------------------
 
 ``barrier`` und ``measure`` verändern den Zustandstensor in der Gate-Schleife
-nicht. Beide bilden aber eine Fusionsgrenze: Zuvor gepufferte Matrizen werden
-angewendet. Die physikalische Messung wird nicht als Zustandskollaps simuliert,
+nicht. Beide bilden aber eine Fusionsgrenze. Alle vorausgehenden Matrizen werden
+fusioniert und angewendet. Die physikalische Messung wird nicht als Zustandskollaps simuliert,
 weil das Ergebnisobjekt den Statevector vor der Endmessung zurückgeben soll.
 
 6. Abschließender Flush
@@ -124,7 +123,7 @@ mit führenden Nullen.
 8. Measurement Sampling
 ------------------------
 
-Besitzt der Circuit Classical Bits, berechnet der Simulator zunächst
+Aus dem statevector lassen sich mithilfe der Amplituden die Wahrscheinlichkeiten für jeden Basiszustand berechnen:
 
 .. math::
 
@@ -133,11 +132,3 @@ Besitzt der Circuit Classical Bits, berechnet der Simulator zunächst
 ``numpy.random.Generator.choice`` zieht anschließend ``shots`` Indizes mit
 diesen Wahrscheinlichkeiten. Jeder gezogene Index wird als Binärstring der
 Länge ``num_qubits`` formatiert und im Count-Dictionary gezählt.
-
-Komplexität
------------
-
-Der Zustand benötigt :math:`O(2^n)` Speicher. Auch die Anwendung eines
-Ein-Qubit-Gates oder CNOTs berührt grundsätzlich :math:`O(2^n)` Amplituden.
-Gate Fusion reduziert die Zahl vollständiger Tensor-Kontraktionen, ändert aber
-nicht die exponentielle Statevector-Größe.

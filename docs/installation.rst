@@ -41,21 +41,3 @@ Die vollständige Testsuite wird so gestartet:
 .. code-block:: console
 
    uv run pytest
-
-Sphinx-Dokumentation bauen
---------------------------
-
-Unter Linux und macOS:
-
-.. code-block:: console
-
-   uv run sphinx-build -M html docs docs/_build
-
-Alternativ kann im Verzeichnis ``docs`` das Makefile verwendet werden:
-
-.. code-block:: console
-
-   uv run make -C docs html
-
-Unter Windows steht zusätzlich ``docs/make.bat`` zur Verfügung. Die erzeugte
-Startseite befindet sich anschließend unter ``docs/_build/html/index.html``.

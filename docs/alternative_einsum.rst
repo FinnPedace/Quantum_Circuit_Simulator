@@ -183,7 +183,5 @@ Die Kernfunktion prüft:
 * genau :math:`2^n` Amplituden;
 * eine Matrix der Form ``(2, 2)``.
 
-Sie prüft nicht numerisch, ob die Matrix tatsächlich unitär ist.
-
 Die CNOT-Kernfunktion prüft zusätzlich, dass mindestens zwei Qubits vorhanden
 sind und dass Control und Target gültige, unterschiedliche Qubit-Indizes sind.
