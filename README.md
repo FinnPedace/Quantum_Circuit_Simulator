@@ -82,7 +82,7 @@ result = simulator.simulate(circuit, SimulationConfig(shots=1_000, seed=42))
 
 Der folgende End-to-End-Benchmark vergleicht Qiskit Aer mit beiden eigenen
 Backends, jeweils mit und ohne Gate Fusion. Dargestellt ist der Median aus
-fünf warmen Läufen für 4, 8, 12, 16 und 20 Qubits. Jeder Circuit enthält
+fünf Läufen für 4, 8, 12, 16 und 20 Qubits. Jeder Circuit enthält
 exakt 100 mit Seed 42 reproduzierbar erzeugte Gates: ungefähr 80 % zufällige
 Ein-Qubit-Gates und 20 % CNOTs. Die Numba-JIT-Kompilierung ist nicht Teil der
 Messung. Für Aer sind die interne Gate Fusion und parallele Berechnung
@@ -143,7 +143,7 @@ an/aus mit Qiskit Aer.
 ## Einschränkungen
 
 Unterstützt werden Ein-Qubit-Operationen mit einer 2×2-Matrix, `cx`, Barrieren
-und vollständige Endmessungen. Andere Mehr-Qubit-Gates, Teilmessungen,
+und die Messung aller Qubits am Ende einer Schaltung. Die Messung erfolgt in der Computational-Basis. Andere Mehr-Qubit-Gates, Teilmessungen,
 dynamische Circuits, Noise-Modelle und beliebige Initialzustände sind derzeit
 nicht implementiert.
 
