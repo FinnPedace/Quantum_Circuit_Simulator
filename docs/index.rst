@@ -34,7 +34,7 @@ Ein kleines Beispiel
    print(result.counts)
 
 Der zurückgegebene Statevector beschreibt immer den Zustand vor den
-Endmessungen. 
+Endmessungen.
 
 .. note::
 
