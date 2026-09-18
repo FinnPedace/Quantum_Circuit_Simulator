@@ -128,12 +128,15 @@ Blöcke und bildet jeweils ``target_zero_index`` und ``target_one_index``. Da
 Control und Target verschieden sein müssen, besitzen beide Partner dasselbe
 Control-Bit.
 
-Die Control-Maske lautet
+Der Wert des Control-Bits wird ohne bitweise Operatoren aus dem Index
+bestimmt. ``2**control_qubit`` ist dabei die Stellenwertigkeit des
+Control-Bits:
 
 .. code-block:: python
 
-   control_bit_mask = 1 << control_qubit
-   control_is_one = bool(target_zero_index & control_bit_mask)
+   control_bit_place_value = 2**control_qubit
+   control_bit_value = (target_zero_index // control_bit_place_value) % 2
+   control_is_one = control_bit_value == 1
 
 Für jedes Target-Paar gibt es damit zwei Fälle:
 

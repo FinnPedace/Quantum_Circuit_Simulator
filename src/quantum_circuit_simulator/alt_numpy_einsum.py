@@ -23,8 +23,10 @@ def _single_qubit_unitary_kernel(
     u10 = unitary[1, 0]
     u11 = unitary[1, 1]
 
-    pair_distance = 1 << target_qubit
-    block_size = pair_distance << 1
+    # Bei Qubit i liegen zwei Amplituden, die sich nur in diesem Bit
+    # unterscheiden, 2**i Eintraege auseinander.
+    pair_distance = 2**target_qubit
+    block_size = 2 * pair_distance
 
     for block_start in range(0, statevector.size, block_size):
         for offset in range(pair_distance):
@@ -50,16 +52,22 @@ def _cnot_kernel(
 ) -> np.ndarray:
     """Numba-Kernel für die bedingte Permutation der CNOT-Amplituden."""
     result = np.empty_like(statevector)
-    pair_distance = 1 << target_qubit
-    block_size = pair_distance << 1
-    control_bit_mask = 1 << control_qubit
+    pair_distance = 2**target_qubit
+    block_size = 2 * pair_distance
+    control_bit_place_value = 2**control_qubit
 
     for block_start in range(0, statevector.size, block_size):
         for offset in range(pair_distance):
             target_zero_index = block_start + offset
             target_one_index = target_zero_index + pair_distance
 
-            if target_zero_index & control_bit_mask:
+            # Das Control-Bit ist die Ziffer an der Stelle 2**control_qubit
+            # in der Binaerdarstellung des Index. Division und Modulo machen
+            # diese Abfrage ohne bitweise Operatoren explizit.
+            control_bit_value = (
+                target_zero_index // control_bit_place_value
+            ) % 2
+            if control_bit_value == 1:
                 # Control = 1: Das Target-Bit wird gekippt, also werden die
                 # beiden Amplituden des Target-Paares vertauscht.
                 result[target_zero_index] = statevector[target_one_index]
@@ -99,7 +107,7 @@ def apply_single_qubit_unitary(
         raise ValueError(f"target_qubit must be between 0 and {num_qubits - 1}")
     if statevector.ndim != 1:
         raise ValueError("statevector must be one-dimensional")
-    expected_size = 1 << num_qubits
+    expected_size = 2**num_qubits
     if statevector.size != expected_size:
         raise ValueError(f"statevector must contain {expected_size} amplitudes")
     if unitary.shape != (2, 2):
@@ -148,7 +156,7 @@ def apply_cnot_statevector(
     if statevector.ndim != 1:
         raise ValueError("statevector must be one-dimensional")
 
-    expected_size = 1 << num_qubits
+    expected_size = 2**num_qubits
     if statevector.size != expected_size:
         raise ValueError(f"statevector must contain {expected_size} amplitudes")
 
