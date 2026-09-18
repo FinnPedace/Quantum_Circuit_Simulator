@@ -29,7 +29,7 @@ angelegt:
 Anschließend wird er mit ``order="F"`` in einen Tensor mit einer Achse pro
 Qubit umgeformt.
 
-3. Ein-Qubit-Kontraktion
+3. Ein-Qubit-Gate-Kontraktion
 ------------------------
 
 Eine Ein-Qubit-Matrix :math:`U` wird entlang der Zielachse angewendet. Der
